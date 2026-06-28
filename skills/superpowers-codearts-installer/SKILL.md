@@ -1,6 +1,6 @@
 ---
 name: superpowers-codearts-installer
-description: Install, update, or uninstall Superpowers skills for CodeArts. Use when User wants to install Superpowers for CodeArts, update existing Superpowers skills, remove Superpowers, or set up the Superpowers workflow system on CodeArts. Triggers on: install superpowers, update superpowers, delete superpowers, remove superpowers, uninstall superpowers, setup superpowers, superpowers for CodeArts, 安装superpowers, 更新superpowers, 卸载superpowers.
+description: "Install, update, or uninstall Superpowers skills for CodeArts. Use when the user wants to install Superpowers for CodeArts, update existing Superpowers skills, remove Superpowers, or set up the Superpowers workflow system on CodeArts. Triggers on: install superpowers, update superpowers, delete superpowers, remove superpowers, uninstall superpowers, setup superpowers, superpowers for CodeArts, 安装superpowers, 更新superpowers, 卸载superpowers."
 ---
 
 # Superpowers CodeArts Installer
