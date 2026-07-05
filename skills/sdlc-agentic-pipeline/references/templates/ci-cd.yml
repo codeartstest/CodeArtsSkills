@@ -1,0 +1,137 @@
+# CI/CD Pipeline Template
+#
+# Flow: sonar-scan -> build -> deploy-to-jfrog
+#   - sonar-scan and deploy-to-jfrog are fixed (same for every project)
+#   - build is GENERIC: replace the placeholder steps with the setup +
+#     build commands for your project's language/framework.
+#
+# Required GitHub Action secrets (add under Settings -> Secrets and variables -> Actions):
+#   SONAR_TOKEN           - SonarCloud authentication token
+#   JFROG_PLATFORM_URL    - JFrog platform base URL (e.g. https://<org>.jfrog.io)
+#   JFROG_DOCKER_REGISTRY - JFrog Docker registry hostname
+#   JFROG_USERNAME        - JFrog user account
+#   JFROG_PASSWORD        - JFrog password / access token
+#   JFROG_PROJECT         - JFrog project key
+#   (GITHUB_TOKEN is auto-provided by GitHub Actions - no need to add it manually)
+#
+# Placeholders to replace per project:
+#   <GITHUB_REPO>      - repository name (used for image name & build name)
+#   <JFROG_REPO_KEY>   - JFrog Docker repository key
+#   <SETUP_ACTION>/<VERSION>, <INSTALL_COMMAND>, <BUILD_COMMAND> - generic build section
+
+name: CI/CD Pipeline
+
+on:
+  workflow_dispatch:
+
+env:
+  JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+  JF_DOCKER_REGISTRY: ${{ secrets.JFROG_DOCKER_REGISTRY }}
+  JF_USER: ${{ secrets.JFROG_USERNAME }}
+  JF_PASSWORD: ${{ secrets.JFROG_PASSWORD }}
+  JF_BUILD_NAME: <GITHUB_REPO>-build
+  JF_BUILD_NUMBER: ${{ github.run_number }}
+  JF_PROJECT: ${{ secrets.JFROG_PROJECT }}
+
+jobs:
+  sonar-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  build:
+    needs:
+      - sonar-scan
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ============================================================
+      # GENERIC BUILD SECTION
+      # Replace the placeholder steps below with the setup + build
+      # commands for YOUR project (npm, mvn, gradle, dotnet, go,
+      # python, docker, etc.). sonar-scan (above) and deploy-to-jfrog
+      # (below) stay the same regardless of project type.
+      # ============================================================
+
+      - name: Set up build toolchain
+        uses: <SETUP_ACTION>@<VERSION>
+        # e.g. actions/setup-node@v4, actions/setup-java@v4,
+        #      actions/setup-python@v5, actions/setup-go@v5
+
+      - name: Install dependencies
+        run: <INSTALL_COMMAND>
+        # e.g. npm install, pip install -r requirements.txt,
+        #      mvn dependency:resolve, go mod download
+
+      - name: Build project
+        run: <BUILD_COMMAND>
+        # e.g. npm run build, npx ng build --configuration=production,
+        #      mvn package, dotnet build, go build ./...
+
+  deploy-to-jfrog:
+    needs:
+      - build
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JFrog CLI
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+          ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+
+      - name: Configure JFrog CLI
+        run: |
+          jf config add jfrog \
+            --url="${{ env.JFROG_PLATFORM_URL }}" \
+            --user="${{ env.JF_USER }}" \
+            --password="${{ env.JF_PASSWORD }}" \
+            --interactive=false
+
+          jf config use jfrog
+
+      - name: Add Git Info to Build
+        run: |
+          jf rt build-add-git \
+            "${{ env.JF_BUILD_NAME }}" \
+            "${{ env.JF_BUILD_NUMBER }}" \
+            --project="${{ env.JF_PROJECT }}" .
+
+      - name: Docker Login
+        run: |
+          echo "${{ env.JF_PASSWORD }}" | docker login ${{ env.JF_DOCKER_REGISTRY }} \
+            -u "${{ env.JF_USER }}" \
+            --password-stdin
+
+      - name: Build Docker Image
+        run: |
+          docker build \
+            -t ${{ env.JF_DOCKER_REGISTRY }}/<JFROG_REPO_KEY>/<GITHUB_REPO>:${{ github.sha }} \
+            -t ${{ env.JF_DOCKER_REGISTRY }}/<JFROG_REPO_KEY>/<GITHUB_REPO>:latest \
+            .
+
+      - name: Push Docker Image
+        run: |
+          docker push ${{ env.JF_DOCKER_REGISTRY }}/<JFROG_REPO_KEY>/<GITHUB_REPO>:${{ github.sha }}
+          docker push ${{ env.JF_DOCKER_REGISTRY }}/<JFROG_REPO_KEY>/<GITHUB_REPO>:latest
+
+      - name: Publish Build Info
+        run: |
+          jf rt build-publish \
+            "${{ env.JF_BUILD_NAME }}" \
+            "${{ env.JF_BUILD_NUMBER }}" \
+            --project="${{ env.JF_PROJECT }}"
