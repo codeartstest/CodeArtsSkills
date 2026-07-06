@@ -14,22 +14,22 @@ Then restart CodeArts. The skill will be available in your next session.
 
 ## Skills
 
-### superpowers-codearts-installer
+### superpowers-installer
 
 Install, update, or uninstall the [Superpowers](https://github.com/obra/superpowers) skills framework for CodeArts.
 
 **Installation:**
 
 ```bash
-npx skills add https://github.com/codeartsagent/codeartsskills --skill superpowers-codearts-installer -a codearts-agent
+npx skills add https://github.com/codeartsagent/codeartsskills --skill superpowers-installer -a codearts-agent
 ```
 
 **Usage — three commands:**
 
 ```bash
-node skills/superpowers-codearts-installer/scripts/installer.js init    [--project|--user]
-node skills/superpowers-codearts-installer/scripts/installer.js update  [--project|--user]
-node skills/superpowers-codearts-installer/scripts/installer.js delete  [--project|--user]
+node skills/superpowers-installer/scripts/installer.js init    [--project|--user]
+node skills/superpowers-installer/scripts/installer.js update  [--project|--user]
+node skills/superpowers-installer/scripts/installer.js delete  [--project|--user]
 ```
 
 | Command | Description |
@@ -51,6 +51,49 @@ node skills/superpowers-codearts-installer/scripts/installer.js delete  [--proje
 **Requirements:** Node.js and git (both already required by CodeArts). Works on Windows, Linux, and macOS.
 
 After installation, restart CodeArts and verify by asking: "Tell me about your superpowers".
+
+---
+
+### office-mcp-installer
+
+One-click installer for the [office-mcp](https://github.com/claude-office-skills/skills/tree/main/mcp-servers/office-mcp) MCP server — 39 tools for Word, Excel, PowerPoint, PDF, and OCR operations. Installs to the **current project only** (project-scope); no user-level/global option.
+
+**Installation:**
+
+```bash
+npx skills add https://github.com/codeartsagent/codeartsskills --skill office-mcp-installer -a codearts-agent
+```
+
+**Usage — four commands** (run from the skill's `scripts/` dir):
+
+```bash
+node skills/office-mcp-installer/scripts/installer.js init     # Install office-mcp into this project
+node skills/office-mcp-installer/scripts/installer.js update   # Rebuild from latest source
+node skills/office-mcp-installer/scripts/installer.js delete   # Completely uninstall office-mcp
+node skills/office-mcp-installer/scripts/installer.js status   # Show current install state
+```
+
+| Command | Description |
+|---------|-------------|
+| `init` | Clone + build the MCP server, install to `.codeartsdoer/mcp/office-mcp/`, register skill + MCP config |
+| `update` | Re-clone + rebuild from latest source, overwrite installed files, refresh SKILL.md |
+| `delete` | Remove server dir, skill dir, MCP config entry, and status entry — 100% clean uninstall |
+| `status` | Report install health (server present, version, MCP config registered, skill enabled) |
+
+**Project-scope only** — the installer locates the project root by walking up for a `.codeartsdoer/` folder; it errors if none is found. There is no `--user` fallback.
+
+| Artifact | Project Path |
+|----------|--------------|
+| MCP server | `<project>/.codeartsdoer/mcp/office-mcp/` |
+| MCP config | `<project>/.codeartsdoer/mcp/mcp_settings.json` |
+| Skill definition | `<project>/.codeartsdoer/skills/office-mcp/SKILL.md` |
+| Skill status | `<project>/.codeartsdoer/skills/ProjectSkillStatus.txt` |
+
+**ALSO, YOU CAN USE NATURAL LANGUAGE TO LET THIS SKILL TO INSTALL/UPDATE/DELETE office-mcp for you.**
+
+**Requirements:** Node.js, git, and npm (all already required by CodeArts). Works on Windows, Linux, and macOS.
+
+After installation, restart CodeArts. Verify by asking: "Read the Excel file at ./data.xlsx" or "Create a PowerPoint with 5 slides".
 
 ---
 

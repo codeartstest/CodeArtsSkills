@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "office-mcp": {
+      "source": "claude-office-skills/skills",
+      "sourceType": "github",
+      "skillPath": "office-mcp/SKILL.md",
+      "computedHash": "50f55faef29ff1e3c30a7657121fbf01fcb39aad549d09745894530abe4de913"
+    }
+  }
+}
