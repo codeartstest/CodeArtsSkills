@@ -97,6 +97,48 @@ After installation, restart CodeArts. Verify by asking: "Read the Excel file at 
 
 ---
 
+### playwright-cli-installer
+
+One-click installer for the [playwright-cli](https://github.com/microsoft/playwright-cli) browser automation skill — 40+ CLI commands for navigation, interaction, form filling, and web testing. Installs the skill files, the `@playwright/cli` npm package, and the chromium browser, then runs a dry-run verification.
+
+**Installation:**
+
+```bash
+npx skills add https://github.com/codeartsagent/codeartsskills --skill playwright-cli-installer -a codearts-agent
+```
+
+**Usage — four commands:**
+
+```bash
+node skills/playwright-cli-installer/scripts/installer.js init     [--project|--user]
+node skills/playwright-cli-installer/scripts/installer.js update   [--project|--user]
+node skills/playwright-cli-installer/scripts/installer.js delete   [--project|--user]
+node skills/playwright-cli-installer/scripts/installer.js status   [--project|--user]
+```
+
+| Command | Description |
+|---------|-------------|
+| `init` | Install skill files (npx skills add) + CLI (npm install -g) + chromium browser + dry-run check |
+| `update` | Re-install skill files, upgrade CLI, reinstall browser, re-run dry-run check |
+| `delete` | Remove skill files via npx skills remove (CLI and browser are global, not removed) |
+| `status` | Report install health (skill files, CLI version, chromium browser) |
+
+**Target selection:**
+
+| Flag | Scope | Skills Path |
+|------|-------|-------------|
+| `--project` | Single project | `<project>/.codeartsdoer/skills/` |
+| `--user` | All projects | `~/.codeartsdoer/skills/` |
+| _(omit)_ | Auto-detect | Project if `.codeartsdoer/` exists in cwd, else user |
+
+**ALSO, YOU CAN USE NATURAL LANGUAGE TO LET THIS SKILL TO INSTALL/UPDATE/DELETE playwright-cli for you.**
+
+**Requirements:** Node.js, npm, and git (all already required by CodeArts). Works on Windows, Linux, and macOS.
+
+After installation, restart CodeArts. Verify by asking: "Open https://example.com with playwright-cli and take a snapshot".
+
+---
+
 ### codearena-cn
 
 评测/对比基于同一需求的多个Agent代码实现并打分。按两套独立 rubric（通用 Basic /100 + 本轮需求 Round /100，各加最高 +10 动态加分）评测，产出中英双语报告，覆盖 API / 视觉 / SAST / 架构 / 治理 / 覆盖率评测。
