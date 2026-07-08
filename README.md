@@ -14,158 +14,55 @@ Then restart CodeArts. The skill will be available in your next session.
 
 ## Skills
 
-### superpowers-installer
+### skill-installer
 
-Install, update, or uninstall the [Superpowers](https://github.com/obra/superpowers) skills framework for CodeArts.
-
-**Installation:**
-
-```bash
-npx skills add https://github.com/codeartsagent/codeartsskills --skill superpowers-installer -a codearts-agent
-```
-
-**Usage — three commands:**
-
-```bash
-node skills/superpowers-installer/scripts/installer.js init    [--project|--user]
-node skills/superpowers-installer/scripts/installer.js update  [--project|--user]
-node skills/superpowers-installer/scripts/installer.js delete  [--project|--user]
-```
-
-| Command | Description |
-|---------|-------------|
-| `init` | Clone Superpowers and install all 14 skill directories |
-| `update` | Pull latest Superpowers and overwrite existing skills |
-| `delete` | Cleanly remove all installed Superpowers files |
-
-**Target selection:**
-
-| Flag | Scope | Skills Path |
-|------|-------|-------------|
-| `--project` | Single project | `<project>/.codeartsdoer/skills/` |
-| `--user` | All projects | `~/.codeartsdoer/skills/` |
-| _(omit)_ | Auto-detect | Project if `.codeartsdoer/` exists in cwd, else user |
-
-**ALSO, YOU CAN USE NATURAL LANGUAGE TO LET THIS SKILL TO INSTALL/UPDATE/DELATE Superpowers for you.**
-
-**Requirements:** Node.js and git (both already required by CodeArts). Works on Windows, Linux, and macOS.
-
-After installation, restart CodeArts and verify by asking: "Tell me about your superpowers".
-
----
-
-### office-mcp-installer
-
-One-click installer for the [office-mcp](https://github.com/claude-office-skills/skills/tree/main/mcp-servers/office-mcp) MCP server — 39 tools for Word, Excel, PowerPoint, PDF, and OCR operations. Installs to the **current project only** (project-scope); no user-level/global option.
+Single entry point to install, update, delete, or check the status of any supported CodeArts skill/tool. Consolidates four installers behind one skill — **superpowers**, **office-mcp**, **playwright-cli**, and **openspec** — as internal adapter modules. Specify the target via `--target <name>` (or positionally). 
 
 **Installation:**
 
 ```bash
-npx skills add https://github.com/codeartsagent/codeartsskills --skill office-mcp-installer -a codearts-agent
+npx skills add https://github.com/codeartsagent/codeartsskills --skill skill-installer -a codearts-agent
 ```
 
-**Usage — four commands** (run from the skill's `scripts/` dir):
+**Usage:**
 
 ```bash
-node skills/office-mcp-installer/scripts/installer.js init     # Install office-mcp into this project
-node skills/office-mcp-installer/scripts/installer.js update   # Rebuild from latest source
-node skills/office-mcp-installer/scripts/installer.js delete   # Completely uninstall office-mcp
-node skills/office-mcp-installer/scripts/installer.js status   # Show current install state
+node skills/skill-installer/scripts/installer.js list
+node skills/skill-installer/scripts/installer.js init   --target <name> [--project|--user]
+node skills/skill-installer/scripts/installer.js update --target <name> [--project|--user]
+node skills/skill-installer/scripts/installer.js delete --target <name> [--project|--user]
+node skills/skill-installer/scripts/installer.js status [--target <name>] [--project|--user]
 ```
+
+Positional shorthand: `init openspec` ≡ `init --target openspec`.
+
+**Example — install openspec globally (CLI or natural language):**
+
+```bash
+node skills/skill-installer/scripts/installer.js init --target openspec --user
+```
+Or just tell CodeArts: *"install openspec globally"* / *"安装 openspec 到用户级别"*.
 
 | Command | Description |
 |---------|-------------|
-| `init` | Clone + build the MCP server, install to `.codeartsdoer/mcp/office-mcp/`, register skill + MCP config |
-| `update` | Re-clone + rebuild from latest source, overwrite installed files, refresh SKILL.md |
-| `delete` | Remove server dir, skill dir, MCP config entry, and status entry — 100% clean uninstall |
-| `status` | Report install health (server present, version, MCP config registered, skill enabled) |
+| `list` | List supported targets with scopes, commands, and descriptions |
+| `init --target <name>` | Install the target into the resolved scope |
+| `update --target <name>` | Regenerate/refresh the target from latest source |
+| `delete --target <name>` | Uninstall the target (clean; manifest-tracked where applicable) |
+| `status [--target <name>]` | Health of one target, or all targets if `--target` omitted |
 
-**Project-scope only** — the installer locates the project root by walking up for a `.codeartsdoer/` folder; it errors if none is found. There is no `--user` fallback.
+**Supported targets:**
 
-| Artifact | Project Path |
-|----------|--------------|
-| MCP server | `<project>/.codeartsdoer/mcp/office-mcp/` |
-| MCP config | `<project>/.codeartsdoer/mcp/mcp_settings.json` |
-| Skill definition | `<project>/.codeartsdoer/skills/office-mcp/SKILL.md` |
-| Skill status | `<project>/.codeartsdoer/skills/ProjectSkillStatus.txt` |
+| Target | Scopes | Commands | Source | Installs |
+|--------|--------|----------|--------|----------|
+| `superpowers` | project, user | init, update, delete | [obra/superpowers](https://github.com/obra/superpowers) | 14 Superpowers skills + bootstrap |
+| `office-mcp` | project | init, update, delete, status | [claude-office-skills/skills](https://github.com/claude-office-skills/skills/tree/main/mcp-servers/office-mcp) | MCP server (39 Word/Excel/PPT/PDF/OCR tools) + skill + MCP config |
+| `playwright-cli` | project, user | init, update, delete, status | [microsoft/playwright-cli](https://github.com/microsoft/playwright-cli) | playwright-cli skill + `@playwright/cli` + chromium |
+| `openspec` | project, user | init, update, delete, status | [Fission-AI/OpenSpec](https://github.com/Fission-AI/OpenSpec) | OpenSpec SDD skills (propose/explore/apply/sync/archive) |
 
-**ALSO, YOU CAN USE NATURAL LANGUAGE TO LET THIS SKILL TO INSTALL/UPDATE/DELETE office-mcp for you.**
+Capability gating rejects unsupported combos up front — e.g. `init --target office-mcp --user` errors (project scope only); `status --target superpowers` errors (no status command).
 
-**Requirements:** Node.js, git, and npm (all already required by CodeArts). Works on Windows, Linux, and macOS.
-
-After installation, restart CodeArts. Verify by asking: "Read the Excel file at ./data.xlsx" or "Create a PowerPoint with 5 slides".
-
----
-
-### playwright-cli-installer
-
-One-click installer for the [playwright-cli](https://github.com/microsoft/playwright-cli) browser automation skill — 40+ CLI commands for navigation, interaction, form filling, and web testing. Installs the skill files, the `@playwright/cli` npm package, and the chromium browser, then runs a dry-run verification.
-
-**Installation:**
-
-```bash
-npx skills add https://github.com/codeartsagent/codeartsskills --skill playwright-cli-installer -a codearts-agent
-```
-
-**Usage — four commands:**
-
-```bash
-node skills/playwright-cli-installer/scripts/installer.js init     [--project|--user]
-node skills/playwright-cli-installer/scripts/installer.js update   [--project|--user]
-node skills/playwright-cli-installer/scripts/installer.js delete   [--project|--user]
-node skills/playwright-cli-installer/scripts/installer.js status   [--project|--user]
-```
-
-| Command | Description |
-|---------|-------------|
-| `init` | Install skill files (npx skills add) + CLI (npm install -g) + chromium browser + dry-run check |
-| `update` | Re-install skill files, upgrade CLI, reinstall browser, re-run dry-run check |
-| `delete` | Remove skill files via npx skills remove (CLI and browser are global, not removed) |
-| `status` | Report install health (skill files, CLI version, chromium browser) |
-
-**Target selection:**
-
-| Flag | Scope | Skills Path |
-|------|-------|-------------|
-| `--project` | Single project | `<project>/.codeartsdoer/skills/` |
-| `--user` | All projects | `~/.codeartsdoer/skills/` |
-| _(omit)_ | Auto-detect | Project if `.codeartsdoer/` exists in cwd, else user |
-
-**ALSO, YOU CAN USE NATURAL LANGUAGE TO LET THIS SKILL TO INSTALL/UPDATE/DELETE playwright-cli for you.**
-
-**Requirements:** Node.js, npm, and git (all already required by CodeArts). Works on Windows, Linux, and macOS.
-
-After installation, restart CodeArts. Verify by asking: "Open https://example.com with playwright-cli and take a snapshot".
-
----
-
-### openspec-installer
-
-One-click installer for [OpenSpec](https://github.com/Fission-AI/OpenSpec) — the spec-driven development (SDD) framework for AI coding assistants. OpenSpec's official installer does not support CodeArts; this skill bridges the gap by generating the self-contained OpenSpec skills (via the `trae` donor tool, which has no command adapter) and placing them where CodeArts reads skills. Installs **skills only** — run `openspec init` in each project to create its `openspec/` spec directory.
-
-**Installation:**
-
-```bash
-npx skills add https://github.com/codeartsagent/codeartsskills --skill openspec-installer -a codearts-agent
-```
-
-**Usage — four commands:**
-
-```bash
-node skills/openspec-installer/scripts/installer.js init     [--project|--user]
-node skills/openspec-installer/scripts/installer.js update   [--project|--user]
-node skills/openspec-installer/scripts/installer.js delete   [--project|--user]
-node skills/openspec-installer/scripts/installer.js status   [--project|--user]
-```
-
-| Command | Description |
-|---------|-------------|
-| `init` | Generate OpenSpec skills via `openspec init --tools trae --profile core`, copy `openspec-*` into the skills dir, register in status file |
-| `update` | Regenerate skills from the installed `openspec` CLI's latest content, overwrite installed skills, refresh manifest |
-| `delete` | Remove tracked `openspec-*` skills, clear status entries, remove manifest (leaves `openspec/` spec data intact) |
-| `status` | Report openspec CLI version, installed skills, status entries, manifest; exit 0 if healthy, 1 otherwise |
-
-**Target selection:**
+**Scope:**
 
 | Flag | Scope | Skills Path | Status File |
 |------|-------|-------------|-------------|
@@ -173,11 +70,19 @@ node skills/openspec-installer/scripts/installer.js status   [--project|--user]
 | `--user` | All projects | `~/.codeartsdoer/skills/` | `UserSkillStatus.txt` |
 | _(omit)_ | Auto-detect | Project if `.codeartsdoer/` exists in cwd, else user | — |
 
-**ALSO, YOU CAN USE NATURAL LANGUAGE TO LET THIS SKILL TO INSTALL/UPDATE/DELETE OpenSpec for you.**
+**ALSO, YOU CAN USE NATURAL LANGUAGE TO LET THIS SKILL INSTALL/UPDATE/DELETE any supported target for you** — just name the target (e.g. "install openspec", "更新 office-mcp", "uninstall superpowers").
 
-**Requirements:** Node.js ≥ 20.19.0 (OpenSpec requirement) and npm. If the `openspec` CLI is missing, `init`/`update` auto-install it globally (`npm i -g @fission-ai/openspec@latest`). Works on Windows, Linux, and macOS.
+**Requirements:** Node.js (≥ 20.19.0 for openspec; ≥ 18 otherwise), npm, and git — all already required by CodeArts. Individual targets may install global packages (openspec CLI, `@playwright/cli`) or download browsers automatically. Works on Windows, Linux, and macOS.
 
-After installation, restart CodeArts. Create the project spec dir with `openspec init`, then verify by asking: "Propose a new feature using OpenSpec".
+**Verify:** after install + restart, ask CodeArts something target-specific — e.g. "Propose a new feature using OpenSpec", "Read the Excel file at ./data.xlsx", "Tell me about your superpowers", or "Open https://example.com with playwright-cli".
+
+**Testing:** the skill ships with a zero-dependency test suite:
+
+```bash
+node skills/skill-installer/scripts/test/run.js            # fast: dispatcher + lib + openspec E2E
+node skills/skill-installer/scripts/test/run.js --e2e      # + superpowers
+node skills/skill-installer/scripts/test/run.js --all      # + office-mcp, playwright-cli (heavy)
+```
 
 ---
 
