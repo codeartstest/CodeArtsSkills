@@ -170,7 +170,7 @@ See `references/templates/mcp-settings.json` for the template.
 1. **Parallel dispatch via Jira async**: Backend + Frontend agents work simultaneously
    (Steps 0, 1b, 3). PM dispatches via Jira comments, both agents pick up independently.
 2. **Batch Jira operations**: Bulk create API for tasks (Step 1), batch transitions.
-3. **Direct push for docs/reports**: `.opencode/**`, `docs/**`, `reports/**` paths
+3. **PR-based flow for docs/reports**: `.opencode/**`, `docs/**`, `reports/**` paths
    use a docs branch + PR targeting `dev` (GitHub branch protection applies to the whole
    branch, not individual paths, so a PR is required even for documentation changes).
 4. **Auto-trigger CI/CD**: `on: push` to `dev` branch. No manual DevOps trigger (Step 5->6).
@@ -633,8 +633,8 @@ The pipeline requires explicit human approval at these points:
 >    must go through a feature/docs branch and PR targeting `dev`. Enable GitHub branch
 >    protection rules on both `main` and `dev` (Settings > Branches > Branch protection
 >    rules) to enforce this. `main` is only updated via `dev` → `main` merge at release
->    time (Step 7). SDD docs use direct push (no PR needed, path-based branch protection
->    gates); code changes require the full PR Merge Gate (5 sign-offs).
+>    time (Step 7). SDD docs use a docs branch + PR targeting `dev` (GitHub branch protection
+>    applies to the whole branch, so a PR is required); code changes require the full PR Merge Gate (5 sign-offs).
 
 ## Config Templates
 
@@ -702,9 +702,9 @@ Ready-to-fill templates are in `references/templates/`:
   artifact verification, SonarCloud QG check. DevOps
   reads final pipeline status (1 API call instead of 8+ separate verification calls).
 - **Step 7 (Release Merge):** PM Agent authorizes (sign-offs + human approval),
-  developer agent (Backend if both active, otherwise sole developer) creates and merges
-  the `dev` -> `main` PR via GitHub MCP. Simplified conflict resolution: default
-  "prefer dev" strategy (4 steps), full domain-owner resolution only if CI/CD fails.
+   developer agent (Backend if both active, otherwise sole developer) creates and merges
+   the `dev` -> `main` PR via GitHub MCP. Conflict resolution uses domain-owner strategy
+   (each agent resolves its own files; do NOT blanket-accept dev for all files).
 - **Step 8 (Deployment):** PM Agent authorizes (human approval), DevOps Agent
   executes (SSH into Huawei Cloud ECS, docker pull, docker run, health check,
   rollback on failure).

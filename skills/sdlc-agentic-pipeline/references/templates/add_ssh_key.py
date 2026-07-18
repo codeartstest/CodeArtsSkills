@@ -19,7 +19,7 @@ def add_ssh_key():
     except paramiko.SSHException as e:
         print(f"ERROR: Host key verification failed for {ECS_HOST}.")
         print(f"Verify the ECS host fingerprint first: ssh-keyscan {ECS_HOST} >> {KNOWN_HOSTS_PATH}")
-        print(f"Then re-run this script.")
+        print("Then re-run this script.")
         sys.exit(1)
 
     pub_key_path = os.path.expanduser("~/.ssh/id_rsa.pub")
