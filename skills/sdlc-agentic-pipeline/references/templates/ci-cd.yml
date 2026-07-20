@@ -1,13 +1,13 @@
 # CI/CD Pipeline Template
 #
-# Flow: build -> sonar-scan -> sonar-qg-check -> deploy-to-jfrog -> verify-jfrog
+# Flow: build -> sonar-scan -> deploy-to-jfrog -> verify-jfrog
 #
 # Stage order rationale (prevents resource waste and faulty code deployment):
-#   1. build         - Install deps, verify code compiles (fail fast)
-#   2. sonar-scan    - Run tests with coverage + SonarCloud analysis
-#   3. sonar-qg-check - Quality Gate check (BLOCK deploy if QG fails)
-#   4. deploy-to-jfrog - Docker build + push to JFrog (only if QG passes)
-#   5. verify-jfrog  - Verify artifact exists in JFrog
+#   1. build           - Install deps, verify code compiles (fail fast)
+#   2. sonar-scan      - Run tests with coverage + SonarCloud analysis + QG check
+#                        (sonar.qualitygate.wait=true blocks until QG passes/fails)
+#   3. deploy-to-jfrog - Docker build + push to JFrog (only if QG passes)
+#   4. verify-jfrog    - Verify artifact exists in JFrog
 #
 # AUTO-TRIGGERED on push to dev branch (no manual trigger needed).
 # Also supports manual workflow_dispatch trigger.
@@ -145,29 +145,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-  sonar-qg-check:
-    needs:
-      - sonar-scan
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check SonarCloud Quality Gate
-        run: |
-          QG_STATUS=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
-            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${{ vars.SONAR_PROJECT_KEY }}" \
-            | jq -r '.projectStatus.status')
-          if [ "$QG_STATUS" != "OK" ]; then
-            echo "ERROR: SonarCloud Quality Gate FAILED ($QG_STATUS)"
-            echo "Docker image will NOT be built or pushed to JFrog"
-            exit 1
-          fi
-          echo "SonarCloud Quality Gate PASSED - proceeding to deploy"
+        with:
+          args: -Dsonar.qualitygate.wait=true
 
   deploy-to-jfrog:
     needs:
-      - sonar-qg-check
+      - sonar-scan
 
     runs-on: ubuntu-latest
 
@@ -219,9 +202,16 @@ jobs:
           push: true
           tags: |
             ${{ env.JF_DOCKER_REGISTRY }}/<JFROG_REPO_KEY>/<GITHUB_REPO>:${{ github.sha }}
-            ${{ env.JF_DOCKER_REGISTRY }}/<JFROG_REPO_KEY>/<GITHUB_REPO>:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      - name: Publish image digest as release artifact
+        run: |
+          DIGEST=$(docker buildx imagetools inspect ${{ env.JF_DOCKER_REGISTRY }}/<JFROG_REPO_KEY>/<GITHUB_REPO>:${{ github.sha }} --format '{{.Digest}}' 2>/dev/null || echo "")
+          echo "RELEASE_IMAGE=${{ env.JF_DOCKER_REGISTRY }}/<JFROG_REPO_KEY>/<GITHUB_REPO>:${{ github.sha }}" >> $GITHUB_ENV
+          echo "RELEASE_DIGEST=${DIGEST}" >> $GITHUB_ENV
+          echo "Deployable image: ${{ env.JF_DOCKER_REGISTRY }}/<JFROG_REPO_KEY>/<GITHUB_REPO>:${{ github.sha }}"
+          echo "Digest: ${DIGEST}"
 
       - name: Move Docker cache
         run: |
