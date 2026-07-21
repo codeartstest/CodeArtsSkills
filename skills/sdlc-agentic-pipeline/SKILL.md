@@ -96,6 +96,13 @@ The 6 agent files bundled in the skill at `references/agents/`:
 - Auto-copied to `.codeartsdoer/agents/` during Step 0.0 (before any service onboarding)
 - Idempotent: re-running overwrites with the latest version from the skill bundle
 
+The `playwright-cli` skill (used by the Tester Agent in Step 5) is **bundled inside
+this skill** at `assets/playwright-cli/` and **auto-provisioned during Step 0.0**
+alongside the agent files - a local file copy into `.codeartsdoer/skills/playwright-cli/`,
+**no network download required**. It is registered in
+`ProjectSkillStatus.txt` so the Tester Agent can invoke it. See
+`references/setup/service-onboarding.md` Step 0.0 for the copy procedure.
+
 Step 0 involves multi-agent delegation for project bootstrap (Option B only):
 - **PM Agent** orchestrates: parses prompt, splits scope, generates service configs (NO repo creation, NO git operations)
 - **Backend Agent** creates repo, clones repo, builds backend code, creates `dev` branch, returns CI/CD build info
@@ -118,8 +125,10 @@ Step 0 with an **existing repository (Option A)** is fundamentally different:
   The DevOps Agent owns git write for infrastructure files only but does NOT create
   or merge PRs - all PR operations are routed to developer agents.
 
-The `playwright-cli` skill (used by the Tester Agent in Step 5) is **auto-provisioned**
-during Step 0 onboarding - no manual installation is required.
+The `playwright-cli` skill (used by the Tester Agent in Step 5) is **bundled**
+inside this skill at `assets/playwright-cli/` and **auto-provisioned during
+Step 0.0** via a local file copy - no network download or manual installation
+is required.
 
 > **WARNING:**
 > **Critical setup conflict:** Before any CI/CD pipeline runs, the user MUST
@@ -191,7 +200,7 @@ See `references/templates/mcp-settings.json` for the template.
             v
 +-------------------------+     references/setup/
 | STEP 0: Service         | --> service-onboarding.md
-| Onboarding              |     (7 services, config generation)
+| Onboarding              |     (6 services, config generation)
 |                         |
 | Option A (Existing Repo)|     Option B (New Repo)
 |  PM (READ-ONLY):        |      PM orchestrates:
@@ -648,6 +657,14 @@ Ready-to-fill templates are in `references/templates/`:
 | `env-template.env` | Environment variables for all services |
 | `set-secrets.js` | GitHub Actions secrets/variables setup script (sets SONAR_TOKEN, JFROG_PASSWORD as secrets; JFROG_PLATFORM_URL, JFROG_DOCKER_REGISTRY, JFROG_USERNAME, JFROG_PROJECT as variables) |
 | `add_ssh_key.py` | Python script to add SSH public key to Huawei Cloud ECS for key-based authentication |
+
+## Bundled Skill Asset
+
+The `playwright-cli` skill (used by the Tester Agent in Step 5) is **vendored** at
+`assets/playwright-cli/` (SKILL.md + 9 reference guides) rather than downloaded at
+runtime. It is auto-provisioned into `.codeartsdoer/skills/playwright-cli/` via a
+local file copy in Step 0.0b - no network access required. The `@playwright/cli`
+npm package and chromium browser are installed on demand by the Tester Agent (§5.0).
 
 ## Execution Notes
 

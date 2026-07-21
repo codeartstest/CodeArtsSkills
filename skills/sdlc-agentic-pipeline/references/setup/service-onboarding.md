@@ -102,6 +102,117 @@ automatically before any service onboarding - **no user action needed**.
 
 ---
 
+## 0.0b - Auto-Provision playwright-cli Skill (Runs First)
+
+The `playwright-cli` skill (required by the Tester Agent in Step 5) is **bundled
+inside this skill** at `assets/playwright-cli/`. It is copied into
+`.codeartsdoer/skills/playwright-cli/` as a **local file copy** - **no network
+download** (`npx skills add`) is needed. This step runs automatically right after
+the agent definition files are copied (Step 0.0) and before any service onboarding.
+
+### playwright-cli Bundle Contents
+
+| Path | Purpose |
+|------|---------|
+| `assets/playwright-cli/SKILL.md` | Skill entrypoint (commands reference) |
+| `assets/playwright-cli/references/*.md` | 9 task reference guides (tests, mocking, sessions, etc.) |
+
+### Auto-Copy Procedure (run via bash)
+
+1. **Create target directory** if it doesn't exist:
+
+   **Windows (PowerShell):**
+   ```powershell
+   $targetDir = ".codeartsdoer/skills/playwright-cli"
+   if (-not (Test-Path $targetDir)) { New-Item -ItemType Directory -Path $targetDir -Force }
+   ```
+
+   **macOS/Linux (Bash):**
+   ```bash
+   mkdir -p .codeartsdoer/skills/playwright-cli
+   ```
+
+2. **Copy the entire bundled skill** from `assets/playwright-cli/` to
+   `.codeartsdoer/skills/playwright-cli/` (real files, never a junction/symlink):
+
+   **Windows (PowerShell):**
+   ```powershell
+   $sourceDir = ".codeartsdoer/skills/sdlc-agentic-pipeline/assets/playwright-cli"
+   if (Test-Path $sourceDir) {
+       Copy-Item -Path "$sourceDir\*" -Destination ".codeartsdoer/skills/playwright-cli" -Recurse -Force
+       Write-Output "playwright-cli skill copied from bundled assets"
+   } else {
+       Write-Error "MISSING: bundled playwright-cli assets not found at $sourceDir"
+   }
+   ```
+
+   **macOS/Linux (Bash):**
+   ```bash
+   sourceDir=".codeartsdoer/skills/sdlc-agentic-pipeline/assets/playwright-cli"
+   if [ -d "$sourceDir" ]; then
+       cp -R "$sourceDir/." .codeartsdoer/skills/playwright-cli/
+       echo "playwright-cli skill copied from bundled assets"
+   else
+       echo "ERROR: MISSING bundled playwright-cli assets not found at $sourceDir" >&2
+   fi
+   ```
+
+3. **Verify** the skill landed as real files (SKILL.md present, not a symlink):
+
+   **Windows (PowerShell):**
+   ```powershell
+   $p = Get-Item ".codeartsdoer/skills/playwright-cli"
+   if ((Test-Path "$p/SKILL.md") -and -not $p.LinkType) {
+       Write-Output "playwright-cli verified (SKILL.md present, real files)"
+   } else {
+       Write-Error "playwright-cli verification FAILED"
+   }
+   ```
+
+   **macOS/Linux (Bash):**
+   ```bash
+   test -f ./.codeartsdoer/skills/playwright-cli/SKILL.md \
+     && [ ! -L ./.codeartsdoer/skills/playwright-cli ] \
+     && echo "playwright-cli verified" || echo "ERROR: playwright-cli verification FAILED"
+   ```
+
+4. **Register** the skill as enabled by ensuring
+   `.codeartsdoer/skills/ProjectSkillStatus.txt` contains `playwright-cli=true`
+   (append if missing, do not duplicate):
+
+   **Windows (PowerShell):**
+   ```powershell
+   $statusFile = ".codeartsdoer/skills/ProjectSkillStatus.txt"
+   $line = "playwright-cli=true"
+   if (Test-Path $statusFile) {
+       $existing = Get-Content $statusFile
+       if ($existing -notcontains $line) { Add-Content $statusFile $line }
+   } else {
+       Set-Content $statusFile $line
+   }
+   ```
+
+   **macOS/Linux (Bash):**
+   ```bash
+   statusFile=".codeartsdoer/skills/ProjectSkillStatus.txt"
+   line="playwright-cli=true"
+   grep -qxF "$line" "$statusFile" 2>/dev/null || echo "$line" >> "$statusFile"
+   ```
+
+5. If verification fails (e.g., the bundled `assets/playwright-cli/` folder is
+   missing because the sdlc skill was installed from an older snapshot), report
+   the error to the user. Do NOT fall back to `npx skills add` automatically -
+   the skill is expected to be self-contained.
+
+> This step is idempotent - re-running overwrites the files with the latest
+> version from the skill bundle. No user interaction or network access required.
+>
+> **Note:** The `@playwright/cli` npm package and chromium browser are NOT
+> installed here. If the `playwright-cli` command is missing at Step 5, the
+> Tester Agent installs them on demand (see `tester-agent.md` §5.0).
+
+---
+
 > **Q0: Is the `sdlc-agentic-pipeline` skill installed at the user level or project level?**
 >
 > - **User level** — available across all projects (stored in `~/.codeartsdoer/skills/`)
@@ -275,7 +386,7 @@ Offer options via the `question` tool:
 > some use GitHub Flow. The pipeline must adapt to the user's existing workflow,
 > not impose its own. Branches are only created by developer agents, never by PM.
 
-#### A.7 - Proceed to Service Onboarding (0.2 - 0.7)
+#### A.7 - Proceed to Service Onboarding (0.2 - 0.6)
 
 From here, the flow is **identical to Option B**. Continue with:
 
@@ -284,7 +395,9 @@ From here, the flow is **identical to Option B**. Continue with:
 - Step 0.4 - Semgrep
 - Step 0.5 - JFrog
 - Step 0.6 - Huawei ECS
-- Step 0.7 - Playwright (auto-provisioned)
+
+> **playwright-cli is NOT onboarded here** - it is bundled inside this skill and
+> auto-provisioned via a local file copy in Step 0.0b (before Step 0.1).
 
 > **No code building, no repo creation, no branch creation** happens during
 > Option A onboarding. The code and branches already exist. The pipeline only
@@ -937,96 +1050,18 @@ for full instructions.
 
 ---
 
-## 0.7 - Playwright CLI (E2E Testing Skill) - Auto-Provisioned
+## 0.7 - Playwright CLI (E2E Testing Skill) - Moved to Step 0.0b
 
-The `playwright-cli` skill is required by the Tester Agent (Step 5). The PM Agent
-auto-installs it during onboarding - **no manual user action is needed**.
-
-### Auto-Install Procedure (run via bash)
-
-1. **Idempotency check**: if `.codeartsdoer/skills/playwright-cli/SKILL.md` already
-   exists AND is not a junction/symlink, skip installation - the skill is already
-   available.
-   ```powershell
-   # Windows (PowerShell)
-   $p = ".codeartsdoer/skills/playwright-cli"
-   if ((Test-Path "$p/SKILL.md") -and -not (Get-Item $p).LinkType) { Write-Output "Already installed" }
-   ```
-   ```bash
-   # macOS/Linux (Bash)
-   [ -f ./.codeartsdoer/skills/playwright-cli/SKILL.md ] && [ ! -L ./.codeartsdoer/skills/playwright-cli ] && echo "Already installed"
-   ```
-2. **Install** the skill from Microsoft's repository (use `--yes` for non-interactive):
-   ```bash
-   npx skills add https://github.com/microsoft/playwright-cli --skill playwright-cli --yes
-   ```
-3. **Check if a junction/symlink was created** at `.codeartsdoer/skills/playwright-cli`.
-   The `npx skills add --yes` command may create a junction pointing to
-   `.agents/skills/playwright-cli` instead of copying the real files. Junctions
-   must be replaced with real files to avoid dependency on the `.agents/` directory.
-
-   **Windows (PowerShell):**
-   ```powershell
-   $p = Get-Item ".codeartsdoer/skills/playwright-cli" -ErrorAction SilentlyContinue
-   if ($p -and $p.LinkType) {
-       # It's a junction - replace with real files
-       $p.Delete()
-       Copy-Item -Path ".agents/skills/playwright-cli" -Destination ".codeartsdoer/skills/playwright-cli" -Recurse -Force
-       [System.IO.Directory]::Delete("$PWD/.agents", $true)
-       Write-Output "Junction replaced with real files, .agents removed"
-   } elseif (Test-Path ".agents/skills/playwright-cli") {
-       # No junction but files are in .agents - move them
-       Move-Item ".agents/skills/playwright-cli" ".codeartsdoer/skills/playwright-cli"
-       [System.IO.Directory]::Delete("$PWD/.agents", $true)
-       Write-Output "Files moved from .agents to .codeartsdoer/skills"
-   }
-   ```
-
-   **macOS/Linux (Bash):**
-   ```bash
-   if [ -L ./.codeartsdoer/skills/playwright-cli ]; then
-       rm ./.codeartsdoer/skills/playwright-cli
-       mv ./.agents/skills/playwright-cli ./.codeartsdoer/skills/playwright-cli
-       rm -rf ./.agents
-       echo "Symlink replaced with real files, .agents removed"
-   elif [ -d ./.agents/skills/playwright-cli ]; then
-       mv ./.agents/skills/playwright-cli ./.codeartsdoer/skills/playwright-cli
-       rm -rf ./.agents
-       echo "Files moved from .agents to .codeartsdoer/skills"
-   fi
-   ```
-4. **Verify** the skill landed as real files (not a junction):
-
-   **Windows (PowerShell):**
-   ```powershell
-   $p = Get-Item ".codeartsdoer/skills/playwright-cli"
-   Write-Output "Exists: $(Test-Path "$p/SKILL.md") | LinkType: $($p.LinkType)"
-   # LinkType should be empty (real files, not junction)
-   ```
-
-   **macOS/Linux (Bash):**
-   ```bash
-   test -f ./.codeartsdoer/skills/playwright-cli/SKILL.md && [ ! -L ./.codeartsdoer/skills/playwright-cli ] && echo "OK" || echo "MISSING"
-   ```
-
-   If verification fails, re-run the install and report the error to the user.
-5. **Register** the skill as enabled by appending to
-   `.codeartsdoer/skills/ProjectSkillStatus.txt`:
-   ```
-   playwright-cli=true
-   ```
-6. **Verify `.agents/` directory is removed** (should not exist after step 3):
-   ```powershell
-   # Windows
-   Test-Path .agents  # Should return False
-   ```
-   ```bash
-   # macOS/Linux
-   [ ! -d ./.agents ] && echo "OK" || echo ".agents still exists - remove manually"
-   ```
-
-> The Tester Agent declares `playwright-cli: allow` in its skill permissions, so once
-> installed it is automatically invocable from Step 5.
+> **Removed from onboarding.** The `playwright-cli` skill is now **bundled inside
+> this skill** at `assets/playwright-cli/` and auto-provisioned via a **local file
+> copy** in Step 0.0b (right after the agent definition files are copied, before
+> any service onboarding). It is **no longer downloaded** from
+> `microsoft/playwright-cli` via `npx skills add` during onboarding.
+>
+> The Tester Agent declares `playwright-cli: allow` in its skill permissions, so
+> once copied it is automatically invocable from Step 5. The `@playwright/cli` npm
+> package and chromium browser are installed on demand by the Tester Agent (§5.0)
+> if the `playwright-cli` command is missing at runtime.
 
 ---
 
@@ -1331,8 +1366,10 @@ Once all service info is confirmed and saved:
                   |
                   v
   +----------------------------------+
-  |  Step 0.7: Auto-install          |
-  |  Playwright CLI skill            |
+  |  Step 0.0b: Auto-provision       |
+  |  playwright-cli skill            |
+  |  (local copy from bundled        |
+  |   assets, NO network download)   |
   +----------------------------------+
   |  Generate configs:               |
   |  Option A: mcp_settings.json,    |

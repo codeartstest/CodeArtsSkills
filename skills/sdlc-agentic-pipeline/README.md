@@ -79,9 +79,13 @@ The PM Agent is the orchestrator (`mode: all`); all others run as subagents
 ```
 sdlc-agentic-pipeline/
 ├── SKILL.md                          # Skill entry point + pipeline overview
+├── assets/
+│   └── playwright-cli/               # Vendored playwright-cli skill (auto-provisioned in Step 0.0b)
+│       ├── SKILL.md
+│       └── references/               # 9 task reference guides
 └── references/
     ├── setup/
-    │   └── service-onboarding.md     # Step 0: 7-service onboarding guide
+    │   └── service-onboarding.md     # Step 0: 6-service onboarding guide (+ bundled playwright-cli)
     ├── agents/
     │   ├── pm-agent.md
     │   ├── backend-agent.md
@@ -117,8 +121,9 @@ sdlc-agentic-pipeline/
 2. **Enable it** — append `sdlc-agentic-pipeline=true` to
    `.codeartsdoer/skills/ProjectSkillStatus.txt`.
 3. **Run Step 0 (Service Onboarding)** — the PM Agent walks you through setting
-   up GitHub, Jira, SonarCloud, Semgrep, JFrog Artifactory, Huawei Cloud ECS,
-   and Playwright. Configs are generated from the templates in
+   up GitHub, Jira, SonarCloud, Semgrep, JFrog Artifactory, and Huawei Cloud ECS. The `playwright-cli` skill is bundled inside this skill
+   and auto-provisioned via a local file copy in Step 0.0b (no download). Configs
+   are generated from the templates in
    `references/templates/`.
 4. **Start the pipeline** — say "start agentic flow" and the 10-step pipeline
    runs end-to-end.

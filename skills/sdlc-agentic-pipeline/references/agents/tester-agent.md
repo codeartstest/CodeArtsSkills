@@ -49,17 +49,49 @@ avatar: avatar1
 
 ### 5.0 Pre-flight: Verify Playwright CLI Skill
 
-Before writing/running E2E tests, ensure the `playwright-cli` skill is available
-(normally auto-installed during Step 0 onboarding):
+Before writing/running E2E tests, ensure the `playwright-cli` skill is available.
+The skill is **bundled inside the `sdlc-agentic-pipeline` skill** at
+`assets/playwright-cli/` and auto-provisioned via a local file copy in Step 0.0b
+(no network download). Verify and recover as follows:
 
-1. Check for `.codeartsdoer/skills/playwright-cli/SKILL.md`.
-2. If missing, auto-install it now via bash:
+1. **Check the skill files** at `.codeartsdoer/skills/playwright-cli/SKILL.md`.
+2. **If missing**, recover from the bundled assets (local copy, no network):
+   - Locate the bundle. The sdlc skill lives at either
+     `.codeartsdoer/skills/sdlc-agentic-pipeline/assets/playwright-cli` (project)
+     or `~/.codeartsdoer/skills/sdlc-agentic-pipeline/assets/playwright-cli` (user).
+   - Copy it into place and register it:
+
+     **Windows (PowerShell):**
+     ```powershell
+     $src = ".codeartsdoer/skills/sdlc-agentic-pipeline/assets/playwright-cli"
+     if (-not (Test-Path $src)) { $src = "$env:USERPROFILE/.codeartsdoer/skills/sdlc-agentic-pipeline/assets/playwright-cli" }
+     New-Item -ItemType Directory -Path ".codeartsdoer/skills/playwright-cli" -Force | Out-Null
+     Copy-Item -Path "$src\*" -Destination ".codeartsdoer/skills/playwright-cli" -Recurse -Force
+     $line = "playwright-cli=true"
+     $sf = ".codeartsdoer/skills/ProjectSkillStatus.txt"
+     if (-not (Test-Path $sf) -or -not (Get-Content $sf -ErrorAction SilentlyContinue).Contains($line)) { Add-Content $sf $line }
+     ```
+
+     **macOS/Linux (Bash):**
+     ```bash
+     src=".codeartsdoer/skills/sdlc-agentic-pipeline/assets/playwright-cli"
+     [ -d "$src" ] || src="$HOME/.codeartsdoer/skills/sdlc-agentic-pipeline/assets/playwright-cli"
+     mkdir -p .codeartsdoer/skills/playwright-cli
+     cp -R "$src/." .codeartsdoer/skills/playwright-cli/
+     grep -qxF "playwright-cli=true" .codeartsdoer/skills/ProjectSkillStatus.txt 2>/dev/null \
+       || echo "playwright-cli=true" >> .codeartsdoer/skills/ProjectSkillStatus.txt
+     ```
+   - If the bundled `assets/playwright-cli/` folder is also missing, report the
+     error to the PM Agent - do NOT fall back to `npx skills add`.
+3. **Check the `playwright-cli` command** is on PATH (`playwright-cli --version`).
+   The skill files are instructions only; the CLI binary and browser are separate.
+   If the command is missing, install the runtime (on demand):
    ```bash
-   npx skills add https://github.com/microsoft/playwright-cli --skill playwright-cli
+   npm install -g @playwright/cli@latest
+   playwright-cli install-browser chromium
    ```
-   then move the folder into `.codeartsdoer/skills/playwright-cli` and append
-   `playwright-cli=true` to `.codeartsdoer/skills/ProjectSkillStatus.txt`.
-3. Do NOT proceed to 5.1 until the skill is verified present.
+4. Do NOT proceed to 5.1 until BOTH the skill files (step 1-2) AND the CLI binary
+   (step 3) are verified present.
 
 ### 5.1 Task Discovery
 - Discover test tasks via JQL: `labels = agent:tester AND status = "In Review"`
