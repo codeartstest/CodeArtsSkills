@@ -25,6 +25,7 @@ mcp_tools:
 permission:
   skill:
     '*': deny
+    ide-tool: allow
     playwright-cli: allow
 disable: false
 scope: project
@@ -142,3 +143,26 @@ If E2E tests find bugs:
 - **GitHub MCP**: checking out feature branches (from `dev`), reading PR diffs
 - **SonarCloud MCP**: coverage reports, quality gate status
 - **playwright-cli skill**: E2E UI + API flow testing (exclusive owner)
+
+---
+
+## Conditional Step Behavior (Multi-Tool Selection)
+
+> At the start of Step 5, read `.codeartsdoer/tool-selections.json` to
+> determine which tools are active. Use `isSelected(toolId)` to check. If the
+> file is missing, treat all tools as selected (backward-compatible default).
+
+### Dynamic vs Static Permissions
+
+- **Built-in utility skills** (`ide-tool`) are **always present** in this
+  agent's frontmatter - never modified by tool selection.
+- **Methodology skill** (`playwright-cli`) is **dynamically granted/revoked** at
+  onboarding time by the `apply-tool-selections` script based on
+  `tool-selections.json`. If Playwright was not selected, this permission is
+  absent from the frontmatter.
+
+### Per-Step Conditional Logic
+
+| Step | Conditional Behavior |
+|------|---------------------|
+| **5** (E2E) | If `playwright` NOT selected -> **skip E2E testing entirely**. The Tester Agent produces a "no E2E coverage" sign-off note and Step 5 is skipped. If `github` NOT selected -> run tests against the local working directory (no branch checkout). PR merge gate: if no GitHub, skip merge step. |

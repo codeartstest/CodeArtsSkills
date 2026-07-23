@@ -118,3 +118,17 @@ A PR passes Code Review when:
 - **Jira MCP**: task discovery, status transitions, inter-agent comments
 - **SonarCloud MCP**: cross-reference with remote analysis results (optional)
 - **Semgrep MCP**: optional re-verification on throwback (primary scan done in Step 3 by Frontend/Backend agents)
+
+---
+
+## Conditional Step Behavior (Multi-Tool Selection)
+
+> At the start of Step 4, read `.codeartsdoer/tool-selections.json` to
+> determine which tools are active. Use `isSelected(toolId)` to check. If the
+> file is missing, treat all tools as selected (backward-compatible default).
+
+### Per-Step Conditional Logic
+
+| Step | Conditional Behavior |
+|------|---------------------|
+| **4** (Code Review) | If `github` NOT selected -> **skip entirely** (no PRs to review). The Code Reviewer Agent produces no output and is not invoked. If `github` IS selected but `semgrep` is NOT -> skip cross-referencing the Semgrep pre-scan summary in the PR review (the summary won't exist). |

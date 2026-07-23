@@ -30,6 +30,7 @@ permission:
     managing-spec-document: allow
     managing-design-document: allow
     managing-tasks-document: allow
+    openspec: allow
 disable: false
 scope: project
 avatar: avatar1
@@ -139,6 +140,9 @@ When the Frontend Agent is the primary PR operator, it handles:
 
 ## STEP 1: Requirement Review (Frontend Agent)
 
+> **Shared template:** See `agents/shared/developer-agent-base.md` §STEP 1
+> for the common review workflow. Below is the frontend-specific override.
+
 ### 1.1 Receive Review Request from PM Agent
 - Monitor Jira tasks with label `agent:frontend` and status "To Do" for PM review request comments
 - Look for comment: `@agent:frontend Please review requirements - confirm feasibility, flag gaps, suggest changes`
@@ -165,6 +169,10 @@ For each task, evaluate from the frontend perspective:
 ---
 
 ## STEP 2: Spec-Driven Development Setup (creating-sdd-directory skill)
+
+> **Shared template:** See `agents/shared/developer-agent-base.md` §STEP 2
+> for the common SDD setup workflow. Frontend-specific design.md content
+> focuses on component architecture, state management, API contracts.
 
 ### 2.1 Initialize SDD Directory
 - Invoke the `creating-sdd-directory` skill to set up the spec-driven development structure
@@ -195,6 +203,10 @@ After creating/updating SDD documents locally, push them to the GitHub repositor
 ---
 
 ## STEP 3: Code Development & Bug Fixes
+
+> **Shared template:** See `agents/shared/developer-agent-base.md` §STEP 3
+> for the common development workflow (branch, lint, Semgrep, PR, Jira
+> status). Below are frontend-specific overrides.
 
 ### 3.1 Jira Status Transition - In Progress
 - **IMMEDIATELY** upon starting work, transition Jira task status to "In Progress":
@@ -251,6 +263,10 @@ After creating/updating SDD documents locally, push them to the GitHub repositor
 ---
 
 ## STEP 5 (continued): Auto-Merge Feature PRs into `dev` (Frontend Agent - Sole Developer)
+
+> **Shared template:** See `agents/shared/developer-agent-base.md` §STEP 5
+> for the common merge workflow. Frontend handles this only when it is the
+> sole developer agent.
 > Step 5b has been merged into Step 5. After Tester E2E sign-off, PM immediately
 > verifies gates, asks for human approval, and Frontend Agent (sole dev) merges PRs.
 > CI/CD auto-triggers on dev push.
@@ -281,11 +297,14 @@ Before merging any feature PR, verify ALL of the following:
 
 ## STEP 7: Release Merge - `dev` -> `main` (Frontend Agent - Sole Developer)
 
+> **Shared template:** See `agents/shared/developer-agent-base.md` §STEP 7
+> for the common release merge + conflict resolution workflow.
+
 > **This step is executed by the Frontend Agent ONLY when it is the sole developer agent.**
 > The PM Agent authorizes the release (sign-offs + human approval). The Frontend Agent
 > executes the PR creation and merge.
 
-### 8.1 Create Release PR
+### 7.1 Create Release PR
 - Create a PR from `dev` -> `main` via `github_create_pull_request`:
   ```
   github_create_pull_request(
@@ -297,7 +316,7 @@ Before merging any feature PR, verify ALL of the following:
   )
   ```
 
-### 8.2 Merge Release PR
+### 7.2 Merge Release PR
 - Merge the PR via `github_merge_pull_request` (respects branch protection rules on `main`)
 - After merge: `main` now contains all released code for deployment
 - Report success to PM Agent: `@agent:pm Release merge dev -> main complete`
@@ -325,10 +344,14 @@ If the `dev` -> `main` merge encounters conflicts:
 
 ## STEP 9: Push HTML Report to GitHub (Frontend Agent - Sole Developer)
 
+> **Shared template:** See `agents/shared/developer-agent-base.md` §STEP 9
+> for the common report push workflow. Frontend handles this only when it
+> is the sole developer agent.
+
 > **This step is executed by the Frontend Agent ONLY when it is the sole developer agent.**
 > The PM Agent generates the HTML report. The Frontend Agent pushes it to GitHub.
 
-### 10.1 Push Report
+### 9.1 Push Report
 1. Create a `docs/sdlc-reports` branch from `dev`:
    ```bash
    git checkout dev
@@ -358,7 +381,8 @@ If the `dev` -> `main` merge encounters conflicts:
 
 ## Error Throwback Handling
 
-If Code Reviewer or Tester reports issues:
+> **Shared template:** See `agents/shared/developer-agent-base.md` §"Error
+> Throwback Handling" for the common throwback workflow.
 1. Receive error via Jira comment (e.g., `@agent:frontend Code review found XSS vulnerability in component X`)
 2. Transition Jira task BACK to "In Progress"
 3. Fix the reported issue
@@ -377,3 +401,30 @@ If Code Reviewer or Tester reports issues:
 - **creating-sdd-directory skill**: spec-driven development initialization
 - **frontend-design skill**: UI component design (when available)
 - **i18n-integration skill**: internationalization support (when available)
+
+---
+
+## Conditional Step Behavior (Multi-Tool Selection)
+
+> At the start of the first step, read `.codeartsdoer/tool-selections.json` to
+> determine which tools are active. Use `isSelected(toolId)` to check. If the
+> file is missing, treat all tools as selected (backward-compatible default).
+
+### Dynamic vs Static Permissions
+
+- **Built-in utility skills** (`ide-tool`, `frontend-design`,
+  `i18n-integration`) are **always present** in this agent's frontmatter -
+  never modified by tool selection.
+- **Methodology skills** (`creating-sdd-directory`, `managing-spec-document`,
+  `managing-design-document`, `managing-tasks-document` for SDD) are
+  **dynamically granted/revoked** at onboarding time by the
+  `apply-tool-selections` script based on `tool-selections.json`. If SDD Toolkit
+  was not selected, these permissions are absent from the frontmatter.
+
+### Per-Step Conditional Logic
+
+| Step | Conditional Behavior |
+|------|---------------------|
+| **1b** (Review) | If `jira` NOT selected -> skip review (no Jira comments to dispatch through). If `github` NOT selected -> review happens via local file diff instead of PR review. |
+| **2** (SDD Setup) | If `sdd` NOT selected -> skip SDD directory creation; proceed with plain task list. |
+| **3** (Dev) | If `github` NOT selected -> no feature branches, no PRs; commit directly to local working directory. If `semgrep` NOT selected -> skip local Semgrep pre-scan. `frontend-design` and `i18n-integration` always available (built-in). |
