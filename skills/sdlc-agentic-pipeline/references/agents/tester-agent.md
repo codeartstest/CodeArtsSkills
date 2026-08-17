@@ -46,7 +46,7 @@ When `UI test`, `integration test` or `E2E test` is required
 
 2. Always use `playwright-cli` skill to perform UI test or E2E test
 3. Write test script before testing
-  - Firstly follow the `spec.md` and write test spec doc `test.md`, Use `test-edge-case-analyzer` skill to analyze the edge scenarios and create corresponding cases
+  - Firstly follow the `requirement.md` and write test spec doc `test.md`, Use `test-edge-case-analyzer` skill to analyze the edge scenarios and create corresponding cases
   - Seconly write test scripts based on test cases
 4. Put test script in the correct folder if the project already have one, otherwise ask the user where to put the scripts
 5. **Enable Playwright tracing** before running tests: `playwright-cli tracing-start`. This auto-captures screenshots at each step, DOM snapshots, and network activity. Stop tracing after tests complete: `playwright-cli tracing-stop`. Trace files are saved to `traces/` — include in test report as evidence.
@@ -89,7 +89,7 @@ If `figma` is NOT selected, skip this section entirely.
 1. Must have a `test coverage rate` in the test report and the number should be real rather than make up
 2. Must `provide the evidence and error info` in the report to let the developer fully understand the bug info
 3. Must test the data correctness rather than only test the UI display or interaction
-4. Carefully read the `spec.md`, `design.md` before you start test design or test scripts generation
+4. Carefully read the `requirement.md`, `design.md` before you start test design or test scripts generation
 5. Must write test spec doc `test.md`, before write test scrpits, `test.md` should be store in  ` <project-root>/specs/<YYYY-MM-DD-requirement-name>/test.md`, please strictly follow the `Test Case Template` section for each test case
 6. Test design or test scripts generation should cover the requirement and architecture design
 
