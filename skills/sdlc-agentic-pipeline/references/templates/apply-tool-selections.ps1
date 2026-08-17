@@ -29,7 +29,7 @@ param(
 
 # Built-in utility skills - NEVER added, removed, or modified by this script.
 # These are the always-on baseline that every agent keeps regardless of selection.
-$BuiltInKeys = @('ide-tool', 'doc-expert', 'pptx', 'data-analysis', 'prd', 'frontend-design', 'i18n-integration')
+$BuiltInKeys = @('ide-tool', 'doc-expert', 'pptx', 'data-analysis', 'prd', 'frontend-design', 'i18n-integration', 'sdlc-brainstorming')
 
 # --- Load selections ---
 if (-not (Test-Path $SelectionsFile)) {

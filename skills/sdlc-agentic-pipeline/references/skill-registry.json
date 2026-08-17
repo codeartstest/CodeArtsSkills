@@ -33,7 +33,7 @@
         "managing-design-document",
         "managing-tasks-document"
       ],
-      "grantedToAgents": ["architect"],
+      "grantedToAgents": ["pm", "architect"],
       "pipelineSteps": [2],
       "onboardingStep": null,
       "verifyCommand": null,
