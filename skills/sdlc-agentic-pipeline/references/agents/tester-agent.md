@@ -108,7 +108,7 @@ If `figma` is NOT selected, skip this section entirely.
 1. Must have a `test coverage rate` in the test report and the number should be real rather than make up
 2. Must `provide the evidence and error info` in the report to let the developer fully understand the bug info
 3. Must test the data correctness rather than only test the UI display or interaction
-4. Carefully read the `spec.md`, `design.md` before you start test design or test scripts generation
+4. Carefully read the `requirement.md`, `design.md` before you start test design or test scripts generation
 5. Must write test spec doc `test.md`, before write test scrpits, `test.md` should be store in  ` <project-root>/specs/<YYYY-MM-DD-requirement-name>/test.md`, please strictly follow the `Test Case Template` section for each test case
 6. Test design or test scripts generation should cover the requirement and architecture design
 
