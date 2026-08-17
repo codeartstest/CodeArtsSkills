@@ -47,7 +47,7 @@ Strictly follow the `Must Do` and `Must Not Do`
    - playwright-cli: `node .codeartsdoer/skills/skill-installer/scripts/installer.js status --target playwright-cli`
    - If NOT installed -> run `node .codeartsdoer/skills/skill-installer/scripts/installer.js init --target playwright-cli`
    - html-report-exporter / mock-data-generator / test-edge-case-analyzer / quality-assessment-report:
-     check for presence under `.codeartsdoer/skills/`; if missing, STOP and report — do NOT attempt to install.
+     if missing, do NOT attempt to install and do not recommend to install.
 
 Follow these steps in order:
 1. Identify and connect to the GitHub repository selected for the current project. The repository containing this skill configuration is not necessarily the development repository. Do not assume that the skill repository is the development repository.
