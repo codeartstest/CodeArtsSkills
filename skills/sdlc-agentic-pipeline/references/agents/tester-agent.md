@@ -65,7 +65,7 @@ When `UI test`, `integration test` or `E2E test` is required
 <!--1. Get test tasks from user directly provide -->
 2. Always use `playwright-cli` skill to perform UI test or E2E test
 3. Write test script before testing
-  - Firstly follow the `spec.md` and write test spec doc `test.md`, Use `test-edge-case-analyzer` skill to analyze the edge scenarios and create corresponding cases
+  - Firstly follow the `requirement.md` and write test spec doc `test.md`, Use `test-edge-case-analyzer` skill to analyze the edge scenarios and create corresponding cases
   - Secondly write test scripts based on test cases
 4. Put test script in the correct folder if the project already have one, otherwise ask the user where to put the scripts
 5. **Enable Playwright tracing** before running tests: `playwright-cli tracing-start`. This auto-captures screenshots at each step, DOM snapshots, and network activity. Stop tracing after tests complete: `playwright-cli tracing-stop`. Trace files are saved to `traces/` — include in test report as evidence.
