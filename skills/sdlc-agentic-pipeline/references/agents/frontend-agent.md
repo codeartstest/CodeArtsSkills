@@ -56,8 +56,8 @@ Follow these steps in order:
 3. Locate and read the latest relevant project documentation, including `requirement.md`, `design.md`, `tasks.md`, `DESIGN.md`, and other relevant `.md` files.
 4. If Azure DevOps is configured, check Azure Boards for work items assigned to the frontend agent. If Jira is configured, check Jira for issues assigned to the frontend agent.
 5. Read the assigned task and its acceptance criteria from the configured task management system.
-6. **HARD GATE — Transition assigned work items to "In Progress" BEFORE writing any code.** This is mandatory and blocking; do NOT skip it and do NOT write code until it succeeds. Follow `developer-agent-base.md` §3.1 exactly:
-   - This applies to **All work items** (leaf items with your `agent:frontend` label).
+6. **HARD GATE — Transition assigned Task to "In Progress" BEFORE writing any code.** This is mandatory and blocking; do NOT skip it and do NOT write code until it succeeds. Follow `developer-agent-base.md` §3.1 exactly:
+   - This applies to **Task-level work items only** (leaf items with your `agent:frontend` label).
    - **Azure DevOps mode:** Detect the project process FIRST, then use the correct state name:
      - Query the process: `az boards work-item show --id <WORK_ITEM_ID>` (the `System.State` field / allowed values reveal the process). Or check `az devops project show` for the process template.
      - **Basic process** (`To Do / Doing / Done`) → state value is **`Doing`**.
