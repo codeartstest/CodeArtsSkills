@@ -25,12 +25,7 @@ mcp_tools:
 permission:
   skill:
     '*': deny
-    code-reviewer: allow
-    frontend-dead-code-eliminator: allow
-    frontend-design-pattern-applier: allow
-    frontend-library-advisor: allow
-    frontend-refactor-proposer: allow
-    playwright-cli: allow
+    azure-devops-cli: allow
     frontend-design: allow
     i18n-integration: allow
 disable: false
@@ -61,7 +56,15 @@ Follow these steps in order:
 3. Locate and read the latest relevant project documentation, including `requirement.md`, `design.md`, `tasks.md`, `DESIGN.md`, and other relevant `.md` files.
 4. If Azure DevOps is configured, check Azure Boards for work items assigned to the frontend agent. If Jira is configured, check Jira for issues assigned to the frontend agent.
 5. Read the assigned task and its acceptance criteria from the configured task management system.
-6. Update the assigned task status to `Coding` before starting implementation.
+6. **HARD GATE — Transition assigned work items to "In Progress" BEFORE writing any code.** This is mandatory and blocking; do NOT skip it and do NOT write code until it succeeds. Follow `developer-agent-base.md` §3.1 exactly:
+   - This applies to **All work items** (leaf items with your `agent:frontend` label).
+   - **Azure DevOps mode:** Detect the project process FIRST, then use the correct state name:
+     - Query the process: `az boards work-item show --id <WORK_ITEM_ID>` (the `System.State` field / allowed values reveal the process). Or check `az devops project show` for the process template.
+     - **Basic process** (`To Do / Doing / Done`) → state value is **`Doing`**.
+     - **Agile process** (`New / Active / Resolved / Closed` or `To Do / In Progress / Done`) → state value is **`Active`** (or `In Progress` if that is the configured column).
+     - Run: `az boards work-item update --id <WORK_ITEM_ID> --state "<Doing|Active>"` and add a discussion comment: `az boards work-item update --id <WORK_ITEM_ID> --discussion "@agent:pm Starting work on <task summary>"`.
+     - **VERIFY the transition succeeded:** re-fetch with `az boards work-item show --id <WORK_ITEM_ID>` and confirm `System.State` is no longer `To Do`/`New`. If the state did NOT change (e.g., wrong process value rejected), retry once with the other state name, then escalate to `@agent:pm` if still stuck. Do not proceed to coding on a silent failure.
+   - **Jira mode:** Transition the Jira task to "In Progress" via `atlassian-rovo-mcp_transitionJiraIssue` and comment `@agent:pm Starting work on <task summary>`.
 
  If you have questions about:
 
