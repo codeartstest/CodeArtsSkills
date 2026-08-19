@@ -164,6 +164,12 @@ If `figma` is NOT selected, skip this section entirely.
 
 
 ### 3.1 Status Transition - In Progress
+
+> **Scope:** Task-level work items ONLY. Never transition Epic or Issue items —
+> they are containers and stay in their initial state by design (see
+> `pm-agent.md` Iron Law: "Only Task-level items transition through the SDLC
+> lifecycle"). Skipping this gate is the #1 cause of Tasks stuck in "To Do".
+
 - **Jira mode:** **IMMEDIATELY** upon starting work, transition Jira task status to
   "In Progress":
   ```
@@ -172,9 +178,19 @@ If `figma` is NOT selected, skip this section entirely.
   ```
   Comment on Jira task: `@agent:pm Starting work on <task summary>`
 - **Azure DevOps mode:** **IMMEDIATELY** upon starting work, BEFORE writing any code, use `azure-devops-cli` skill
-  (`references/boards-and-iterations.md`) to:
-  - Update work item `<WORK_ITEM_ID>` state to "Active" (Agile) or "Doing" (Basic) — see `critical-warnings.md#WARN-AZURE-BASIC-STATES`
-  - Add discussion comment: `az boards work-item update --id <ID> --discussion "@agent:pm Starting work on <task summary>"`
+  (`references/boards-and-iterations.md`) to transition the work items. This is a **blocking hard gate** — do NOT write any code until the state has actually changed.
+  1. **Detect the process** (Agile vs Basic) — the state value differs by process and using the wrong one is silently rejected, leaving the Task in "To Do":
+     - `az devops project show` reveals the process template, OR inspect allowed `System.State` values via `az boards work-item show --id <WORK_ITEM_ID>`.
+     - **Basic process** (`To Do / Doing / Done`) → state = **`Doing`**
+     - **Agile process** (`New / Active / Resolved / Closed`, or `To Do / In Progress / Done`) → state = **`Active`** (or `In Progress` if that is the configured column)
+  2. **Update state:** `az boards work-item update --id <WORK_ITEM_ID> --state "<Doing|Active>"`
+  3. **Add discussion comment:** `az boards work-item update --id <WORK_ITEM_ID> --discussion "@agent:pm Starting work on <task summary>"`
+  4. **VERIFY the transition succeeded (mandatory):** re-fetch `az boards work-item show --id <WORK_ITEM_ID>` and confirm `System.State` is no longer `To Do` / `New`. If it did not change, retry once with the other process's state value, then escalate to `@agent:pm` if still stuck. Never proceed to coding on a silent failure.
+
+  > **WARN-AZURE-BASIC-STATES (inlined — `critical-warnings.md` not present in repo):**
+  > - `"Active"` is an **Agile-only** state. On the **Basic** process it does not exist and Azure DevOps rejects the update **silently** — the work item stays in `To Do` with no error. Always detect the process first and use `Doing` on Basic.
+  > - **Never use `"Coding"`** as a state value — it is not a valid Azure DevOps state on any default process and will be silently rejected.
+  > - Only **Task** items transition. Epic/Issue items must remain in their initial state
 
 ### 3.2 Branch Management
 - Pull latest code from remote, create feature branch
