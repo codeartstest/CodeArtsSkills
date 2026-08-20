@@ -152,17 +152,9 @@ if ($env:AZURE_DEVOPS_EXT_PAT) { "PAT is set" } else { "PAT is NOT set" }
 - **If the PAT is set** — do NOT run `az devops login` and do NOT re-prompt the user. The Azure DevOps CLI extension reads `AZURE_DEVOPS_EXT_PAT` automatically. Just smoke-test with `az devops project show` and verify `az devops configure --list` shows the correct org + project.
 - **If the PAT is NOT set** — stop and ask the user for the PAT **once**. After the user provides it, persist it as a user-level env var (see `service-onboarding.md` §0.9.3) so subsequent agents inherit it, then continue. Do NOT ask again in the same pipeline run.
 
-**CRITICAL for Windows Users (Long Content):** Standard `az` commands on Windows (`cmd.exe`) will fail or truncate if `--description` or `--discussion` exceeds ~8191 characters or have special characters or have multi-line descriptions. To avoid this, strictly follow the fallback strategies in `long-comments-on-windows.md` (using `azps.ps1` or `az devops invoke --in-file`) when pushing long descriptions to Azure DevOps. Before pushing contents, MUST check the shell and apply fallbacks strictly from `long-comments-on-windows.md`:
-- If using PowerShell: Use `azps.ps1` script instead of `az` (e.g., `azps.ps1 boards work-item ...`).
-- If NOT using PowerShell (or as a fallback): Put the content into a JSON file and use the REST API via `az devops invoke --in-file ...`.
-- NEVER try to use `@<file>` syntax for plain string arguments like `--description` or `--discussion` — this will fail. Only use `--in-file` for structured JSON.
+**CRITICAL for Windows Users:** `cmd.exe` fails/truncates `--description`/`--discussion` beyond ~8191 chars or with special/multi-line characters. Use a fallback from `long-comments-on-windows.md`: PowerShell → `azps.ps1` (e.g., `azps.ps1 boards work-item ...`); otherwise → `az devops invoke --in-file <file>.json` (REST). NEVER use `@<file>` for plain string args — only `--in-file` for structured JSON.
 
-**Description content (mandatory):** The `--description` of every work item MUST be the full description text taken from `tasks.md` — NEVER a shortened pointer such as "See tasks.md Task T1.1". The Azure DevOps work item is the single source of truth for the assignee, so an external-file reference is not acceptable. Use exactly:
-- **Epic** → the Epic summary paragraph (the line under `### Epic` / `**E1: ...**`).
-- **Issue** → the Issue domain description line (e.g., `Domain: Frontend. Implement the complete static site ...`).
-- **Task** → the complete `Description:` block of that task, including all sub-bullets.
-
-Because these bodies are long and multi-line, on Windows push them via `azps.ps1` (PowerShell) or `az devops invoke --in-file <file>.json` (REST) — never a plain `az boards work-item create --description "..."` in `cmd.exe`, which truncates at ~8191 chars. After creating each item, fetch it (`az boards work-item show --id <id>`) and verify the description equals the `tasks.md` source and is not truncated or a pointer.
+**Description content (mandatory):** `--description` MUST be the full text from `tasks.md` — NEVER a pointer like "See tasks.md Task T1.1". Map: Epic → Epic summary paragraph; Issue → Issue domain description line; Task → complete `Description:` block incl. sub-bullets. After creating each item, fetch it (`az boards work-item show --id <id>`) and verify it matches the `tasks.md` source.
 
 Jira — verify `atlassian-rovo-mcp` is in `mcp_settings.json` and `createJiraIssue` is available.
 
