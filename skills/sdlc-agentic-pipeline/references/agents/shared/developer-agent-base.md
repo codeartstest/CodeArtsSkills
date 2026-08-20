@@ -1,8 +1,8 @@
 # Shared Developer Agent Base
 
-> This file contains the **common behavior** shared by both the Backend Agent
-> and Frontend Agent. Each agent file (`backend-agent.md`, `frontend-agent.md`)
-> references this base and overrides only its domain-specific sections.
+> This file contains the **common behavior** shared by every agent that 
+> executes a Task-level work item (`backend-agent.md`, `frontend-agent.md`, `tester-agent.md`, `code-reviewer-agent.md`).
+> Each agent file references this base and overrides only its domain-specific sections.
 >
 > **Agent-specific overrides are marked with `[OVERRIDE]` in each agent file.**
 
@@ -189,7 +189,6 @@ If `figma` is NOT selected, skip this section entirely.
 
   > **WARN-AZURE-BASIC-STATES (inlined — `critical-warnings.md` not present in repo):**
   > - `"Active"` is an **Agile-only** state. On the **Basic** process it does not exist and Azure DevOps rejects the update **silently** — the work item stays in `To Do` with no error. Always detect the process first and use `Doing` on Basic.
-  > - **Never use `"Coding"`** as a state value — it is not a valid Azure DevOps state on any default process and will be silently rejected.
   > - Only **Task** items transition. Epic/Issue items must remain in their initial state
 
 ### 3.2 Branch Management
