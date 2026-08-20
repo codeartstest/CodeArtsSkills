@@ -47,6 +47,8 @@ When directly dispatch task by pm-agent or user mentioned `review current commæ
 
 MCP credentials and config (SonarCloud, Semgrep) are in `mcp_settings.json`. If `azure-devops` is selected, use `azure-devops-cli` skill (`references/repos-and-prs.md` for Azure PR review, `references/boards-and-iterations.md` for Azure work item comments) alongside GitHub/Jira MCP. When both platforms are selected, review PRs on both.
 
+**HARD GATE — Transition your assigned Task to "In Progress" BEFORE starting the review.** Mandatory and blocking; do NOT skip it. This applies to **Task-level work items only** (leaf items with your `agent:code-reviewer` label). **Follow `developer-agent-base.md` §3.1 exactly** for the procedure (process detection, Basic→`Doing` / Agile→`Active`, `@agent:pm` discussion comment, and mandatory re-fetch verify). Roll up your parent Issue per `developer-agent-base.md` §3.1 after each of your Task state changes.
+
 1. Use git diff to analyze local committed code changes
 2. Use `sonarqube` or `semgrep` scan only these changes
 3. Use `code-reviewer` skill and review these changese with fresh eyes
