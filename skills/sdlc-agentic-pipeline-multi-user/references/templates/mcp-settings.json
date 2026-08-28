@@ -1,0 +1,76 @@
+{
+  "_conditional_generation": {
+    "_doc": "This is a REFERENCE template showing all possible MCP entries. During onboarding, the generation logic reads .codeartsdoer/tool-selections.json and includes ONLY entries for selected MCP items. Unselected entries are omitted entirely. If NO MCP servers are selected, write {\"mcpServers\": {}}.",
+    "selectionMapping": {
+      "atlassian-rovo-mcp": "jira (item 2)",
+      "github": "github (item 1)",
+      "sonarqube": "sonarcloud (item 3)",
+      "semgrep": "semgrep (item 4)",
+      "terraform": "huawei-ecs (item 6, Option B only)",
+      "postman": "postman (item 3, TDD Q3)",
+      "figma": "figma (item 12, design-to-code — exclusive to figma-design-agent)"
+    }
+  },
+  "mcpServers": {
+    "atlassian-rovo-mcp": {
+      "url": "https://mcp.atlassian.com/v1/mcp",
+      "headers": {
+        "Authorization": "Basic <JIRA_MCP_AUTH_BASE64>"
+      },
+      "env": {
+        "JIRA_CLOUD_ID": "<JIRA_CLOUD_ID>",
+        "JIRA_PROJECT_KEY": "<JIRA_PROJECT_KEY>"
+      }
+    },
+    "github": {
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer <GITHUB_PAT>"
+      },
+      "env": {
+        "GITHUB_OWNER": "<GITHUB_OWNER>",
+        "GITHUB_REPO": "<GITHUB_REPO>"
+      }
+    },
+    "sonarqube": {
+      "url": "https://api.sonarcloud.io/mcp",
+      "headers": {
+        "Authorization": "Bearer <SONAR_TOKEN>",
+        "SONARQUBE_ORG": "<SONAR_ORGANIZATION>"
+      },
+      "env": {
+        "SONAR_PROJECT_KEY": "<SONAR_PROJECT_KEY>"
+      }
+    },
+    "semgrep": {
+      "command": "<SEMGREP_EXECUTABLE_PATH>",
+      "args": ["mcp"],
+      "env": {
+
+        "PYTHONIOENCODING": "utf-8"
+      },
+      "disabled": false,
+      "timeout": 120000
+    },
+    "terraform": {
+      "command": "<TERRAFORM_MCP_SERVER_PATH>",
+      "args": ["stdio"],
+      "disabled": false,
+      "timeout": 120000
+    },
+    "postman": {
+      "type": "http",
+      "url": "https://mcp.postman.com/mcp",
+      "headers": {
+        "Authorization": "Bearer <POSTMAN_API_KEY>"
+      },
+      "disabled": false
+    },
+    "figma": {
+      "command": "npx",
+      "args": ["-y", "figma-developer-mcp", "--stdio", "--figma-api-key=<FIGMA_PERSONAL_ACCESS_TOKEN>"],
+      "disabled": false,
+      "timeout": 30000
+    }
+  }
+}
