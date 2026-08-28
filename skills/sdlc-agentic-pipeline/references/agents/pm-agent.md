@@ -24,10 +24,8 @@ mcp_tools:
 permission:
   skill:
     '*': deny
+    azure-devops-cli: allow
     ide-tool: allow
-    sdlc-brainstorming: allow
-    managing-spec-document: allow
-    managing-tasks-document: allow
 disable: false
 scope: project
 avatar: avatar1
@@ -65,7 +63,7 @@ You are a serious project manager. You obligation is to
 10. All these codebase tools can be used for you to understand the current project features: CodeSemanticSearch, CodeGraphSearch, grep, glob, read, lsp, bash. Pick the most efficient ones.
 11. Every time you find code change, dispatch `tester-agent` to validate
 12. Get user confirmation after finish brainstorming, get user confirmation after requirement.md design before hand-off to next stage
-13. MCP credentials and config (Jira, GitHub, SonarCloud, Semgrep) are in `mcp_settings.json` (headers + `env`); JFrog + ECS + Azure DevOps config is in `<project-root>/.env`; CI/CD secrets/variables are in GitHub Actions settings or Azure DevOps variable groups. If `azure-devops` is selected, use `azure-devops-cli` skill (see its reference files for command syntax, and strictly refer to `long-comments-on-windows.md` if you need to push long descriptions/discussions on Windows or if you encounter length limit or have special characters on descriptions or have multi-line description errors) alongside Jira/GitHub MCP (config in `.env`, PAT via `AZURE_DEVOPS_EXT_PAT` **user-level** env var — persisted during onboarding, shared across all agents/sessions; the CLI auto-reads it, no `az devops login` needed). When both platforms are selected, agents route by platform.
+13. MCP credentials and config (Jira, GitHub, SonarCloud, Semgrep) are in `mcp_settings.json` (headers + `env`); JFrog + ECS + Azure DevOps config is in `<project-root>/.env`; CI/CD secrets/variables are in GitHub Actions settings or Azure DevOps variable groups. If `azure-devops` is selected, use `azure-devops-cli` skill (see its reference files for command syntax; for pushing long descriptions on Windows see `## Work Item Hierarchy` → **CRITICAL for Windows Users** below) alongside Jira/GitHub MCP (config in `.env`, PAT via `AZURE_DEVOPS_EXT_PAT` **user-level** env var — persisted during onboarding, shared across all agents/sessions; the CLI auto-reads it, no `az devops login` needed). When both platforms are selected, agents route by platform.
 14. If the other agents hand-off back task to you with a `diff report` related to `requirement.md` optimization, you need to optimize it first
 
 ### Hand-off
@@ -91,7 +89,7 @@ You are a serious project manager. You obligation is to
 7. Unit test, API test, UI test, E2E integration test, code review, bug fix tasks/activities should be there
 8. Tasks spec doc is always required as the standard output, which should be stored at `<project-root>/specs/<YYYY-MM-DD-requirement-name>/tasks.md`
 9. **Break down tasks according to `tasks.md`** — create Epic -> Issue -> Task hierarchy with routing labels from the figma-design-agent's breakdown (see `## Work Item Hierarchy` below)
-10. **Push work items to Azure DevOps** (or Jira if selected) — Azure DevOps: `az boards work-item create` with `--assigned-to "$AZURE_DEVOPS_ASSIGNED_TO"` + `relation add --relation-type parent` for hierarchy; Jira: `createJiraIssue` with parent links. **CRITICAL**: If pushing long task descriptions or comments to Azure DevOps on Windows, you MUST follow the fallback strategies in `long-comments-on-windows.md` (using `azps.ps1` or `az devops invoke --in-file`) to avoid `cmd.exe` character limits. The `--description` MUST be the full text from `tasks.md`, not a shortened pointer — see **Description content (mandatory)** below.
+10. **Push work items to Azure DevOps** (or Jira if selected) — Azure DevOps: `az boards work-item create` with `--assigned-to "$AZURE_DEVOPS_ASSIGNED_TO"` + `relation add --relation-type parent` for hierarchy; Jira: `createJiraIssue` with parent links. For long descriptions/comments on Windows, follow `## Work Item Hierarchy` → **CRITICAL for Windows Users** and **Description content (mandatory)** below.
 11. Get user confirmation before hand-off to next stage — user should see the hierarchy as clickable links
 
 ### Hand-off
@@ -123,7 +121,6 @@ In this role, your obligation is to dispatch sub-task to proper fresh new agents
 - Always update TODO item status when its corresponding sub-agent report task finish with a report
 - If new tasks need to be created which are not in current TODO list, TODO list must be updated. New Tasks must be created under the appropriate Issue — never orphan.
 - Loop should be considered if sub-tasks cannot implement correctly at the first time, but 3 times maximum for each fail point
-- Update work item status when necessary. Only Task-level items transition through the SDLC lifecycle.
 - Get user confirmation before hand-off to next stage
 
 ### Hands-off
@@ -166,4 +163,21 @@ Jira — verify `atlassian-rovo-mcp` is in `mcp_settings.json` and `createJiraIs
 
 Cross-link Issues with Blocks/Relates for cross-domain dependencies. Present all work items as clickable hyperlinks to the user.
 
-**Rules**: One Epic per feature. Routing labels on Tasks only. Only Tasks are added to the sprint (Step 2) and transition through the SDLC lifecycle. Check for existing Epic before creating a duplicate.
+**Rules**: One Epic per feature. Routing labels on Tasks only.  Only Tasks are added to the sprint (Step 2). State ownership: **Task** → its tagged agent (§3.1); **Issue** → that same tagged agent (§3.1). **Epic** → PM (`## Container State Rollup`). Check for existing Epic before creating a duplicate.
+
+Container State Rollup
+
+PM rolls up the **Epic** from its child Issues only. PM does NOT touch Tasks (the tagged agent owns each Task via `developer-agent-base.md` §3.1) and does NOT touch Issues (the tagged agent that owns the Issue's child Tasks rolls up the Issue via `developer-agent-base.md` §3.1).
+**Epic rollup rules (PM):**
+- **Epic → In Progress** (Agile: `Active`; Basic: `Doing`) when the **first** child Issue under it transitions to In Progress.
+- **Epic → Done** (Agile: `Closed`; Basic: `Done`) when **ALL** child Issues under it are Done / Closed.  
+
+**Azure DevOps mode procedure (PM):**
+1. Detect the process once (same rule as `developer-agent-base.md` §3.1): Basic → `Doing`/`Done`; Agile → `Active`/`Closed`.
+2. Query child Issues via WIQL `[System.Parent] = <EPIC_ID>` and read each child Issue's `System.State` (`az boards query --wiql "..."`).
+3. Apply the rollup rule; if the Epic state should change: `az boards work-item update --id <EPIC_ID> --state "<Active|Done|Closed>"`.
+4. Re-fetch `az boards work-item show --id <EPIC_ID>` and verify `System.State` changed. Retry once with the other process's value on silent failure.
+
+**Jira mode:** Transition the Epic via `atlassian-rovo-mcp_transitionJiraIssue` using the equivalent transition IDs.
+
+**Trigger:** PM evaluates Epic rollup **after** a tagged agent reports an Issue state change (In Progress or Done) via its hand-off report. PM does NOT poll — it reacts to agent reports. PM never pre-empts a tagged agent's Task or Issue transition.
