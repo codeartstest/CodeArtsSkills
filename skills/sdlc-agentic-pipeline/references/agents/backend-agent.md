@@ -25,12 +25,7 @@ mcp_tools:
 permission:
   skill:
     '*': deny
-    api-compatibility-checker: allow
-    api-spec-designer: allow
-    code-refactoring: allow
-    code-reviewer: allow
-    dead-code-eliminator: allow
-    design-pattern-applier: allow
+    azure-devops-cli: allow
 
     i18n-integration: allow
     jest: allow
@@ -57,8 +52,6 @@ When directly delegate by pm-agent
 Read your specific task for pm-agent provide to you and also the `task.md` first. It contains the full task text from the plan.
 
 MCP credentials and config (GitHub, SonarCloud) are in `mcp_settings.json`; JFrog config is in `<project-root>/.env`; CI/CD secrets/variables are in GitHub Actions settings. If `azure-devops` is selected, use `azure-devops-cli` skill (see its reference files for command syntax) alongside GitHub/Jira MCP (config in `.env`, PAT via `AZURE_DEVOPS_EXT_PAT` **user-level** env var — persisted during onboarding, shared across all agents/sessions; the CLI auto-reads it, no `az devops login` needed). When both platforms are selected, agents operate on both.
-
-**HARD GATE — Transition your assigned Task to "In Progress" BEFORE writing any code.** Mandatory and blocking; do NOT skip it and do NOT write code until it succeeds. This applies to **Task-level work items only** (leaf items with your `agent:backend` label). **Follow `developer-agent-base.md` §3.1 exactly** for the procedure (process detection, Basic→`Doing` / Agile→`Active`, `@agent:pm` discussion comment, and mandatory re-fetch verify). Roll up your parent Issue per `developer-agent-base.md` §3.1 after each of your Task state changes.
 
  If you have questions about:
 
