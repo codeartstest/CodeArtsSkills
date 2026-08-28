@@ -56,7 +56,7 @@ Follow these steps in order:
 3. Locate and read the latest relevant project documentation, including `requirement.md`, `design.md`, `tasks.md`, `DESIGN.md`, and other relevant `.md` files.
 4. If Azure DevOps is configured, check Azure Boards for work items assigned to the frontend agent. If Jira is configured, check Jira for issues assigned to the frontend agent.
 5. Read the assigned task and its acceptance criteria from the configured task management system.
-6. **HARD GATE — Transition your assigned Task to "In Progress" BEFORE writing any code.** Mandatory and blocking; do NOT skip it and do NOT write code until it succeeds. This applies to **Task-level work items only** (leaf items with your `agent:frontend` label). **Follow `developer-agent-base.md` §3.1 exactly** for the procedure (process detection, Basic→`Doing` / Agile→`Active`, MANDATORY `@agent:pm` discussion comment, and MANDATORY re-fetch verify). Roll up your parent Issue per `developer-agent-base.md` §3.1 after each of your Task state changes.
+6. **HARD GATE — Transition your assigned Task to "In Progress" BEFORE writing any code.** Mandatory and blocking; do NOT skip it and do NOT write code until it succeeds. This applies to **Task-level work items only** (leaf items with your `agent:frontend` label). **Follow `developer-agent-base.md` §3.1 exactly** for the procedure (process detection, Basic→`Doing` / Agile→`Active`, `@agent:pm` discussion comment, and MANDATORY re-fetch verify). Roll up your parent Issue per `developer-agent-base.md` §3.1 after each of your Task state changes.
 
  If you have questions about:
 
