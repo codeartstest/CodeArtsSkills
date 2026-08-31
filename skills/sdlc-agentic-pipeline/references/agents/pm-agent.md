@@ -24,6 +24,9 @@ mcp_tools:
 permission:
   skill:
     '*': deny
+    sdlc-brainstorming: allow
+    managing-spec-document: allow
+    managing-tasks-document: allow
     azure-devops-cli: allow
     ide-tool: allow
 disable: false
