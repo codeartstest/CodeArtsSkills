@@ -24,6 +24,12 @@ permission:
   skill:
     '*': deny
     ide-tool: allow
+    skill-installer: allow
+    playwright-cli: allow
+    jest: allow
+    newman: allow
+    postman: allow
+    vitest: allow
 disable: false
 scope: project
 avatar: avatar1
