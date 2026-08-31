@@ -25,6 +25,12 @@ mcp_tools:
 permission:
   skill:
     '*': deny
+    api-compatibility-checker: allow
+    api-spec-designer: allow
+    code-refactoring: allow
+    code-reviewer: allow
+    dead-code-eliminator: allow
+    design-pattern-applier: allow
     azure-devops-cli: allow
 
     i18n-integration: allow
