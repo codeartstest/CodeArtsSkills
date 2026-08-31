@@ -25,6 +25,7 @@ mcp_tools:
 permission:
   skill:
     '*': deny
+    code-reviewer: allow
     azure-devops-cli: allow
 disable: false
 scope: project
