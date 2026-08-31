@@ -25,6 +25,12 @@ mcp_tools:
 permission:
   skill:
     '*': deny
+    code-reviewer: allow
+    frontend-dead-code-eliminator: allow
+    frontend-design-pattern-applier: allow
+    frontend-library-advisor: allow
+    frontend-refactor-proposer: allow
+    playwright-cli: allow
     azure-devops-cli: allow
     frontend-design: allow
     i18n-integration: allow
