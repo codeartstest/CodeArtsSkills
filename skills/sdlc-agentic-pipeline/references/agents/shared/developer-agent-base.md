@@ -1,8 +1,9 @@
 # Shared Developer Agent Base
 
-> This file contains the **common behavior** shared by both the Backend Agent
-> and Frontend Agent. Each agent file (`backend-agent.md`, `frontend-agent.md`)
-> references this base and overrides only its domain-specific sections.
+> This file contains the **common behavior** shared by every agent that 
+> executes a Task-level work item (`backend-agent.md`, `frontend-agent.md`,
+> `tester-agent.md`, `code-reviewer-agent.md`). Each agent file references this
+> base and overrides only its domain-specific sections.
 >
 > **Agent-specific overrides are marked with `[OVERRIDE]` in each agent file.**
 
@@ -163,7 +164,14 @@ If `figma` is NOT selected, skip this section entirely.
 
 
 
-### 3.1 Status Transition - In Progress
+### 3.1 Status Transition - In Progress & Parent Issue Rollup
+
+> **Shared by:** every agent that executes a Task (backend, frontend, tester,
+> code-reviewer). Each agent runs this for its own `agent:<this-agent>`-tagged
+> leaf Task, then rolls up the parent Issue.
+
+> **Scope:** Task-level work items ONLY. Never transition Epic items. You MAY transition your parent Issue (see **Parent Issue Rollup** below).
+
 - **Jira mode:** **IMMEDIATELY** upon starting work, transition Jira task status to
   "In Progress":
   ```
@@ -172,9 +180,35 @@ If `figma` is NOT selected, skip this section entirely.
   ```
   Comment on Jira task: `@agent:pm Starting work on <task summary>`
 - **Azure DevOps mode:** **IMMEDIATELY** upon starting work, BEFORE writing any code, use `azure-devops-cli` skill
-  (`references/boards-and-iterations.md`) to:
-  - Update work item `<WORK_ITEM_ID>` state to "Active" (Agile) or "Doing" (Basic) — see `critical-warnings.md#WARN-AZURE-BASIC-STATES`
-  - Add discussion comment: `az boards work-item update --id <ID> --discussion "@agent:pm Starting work on <task summary>"`
+  (`references/boards-and-iterations.md`) to transition the work items. This is a **blocking hard gate** — do NOT write any code until the state has actually changed.
+  1. **Detect the process** (Agile vs Basic) — the state value differs by process and using the wrong one is silently rejected, leaving the Task in "To Do":
+     - `az devops project show` reveals the process template, OR inspect allowed `System.State` values via `az boards work-item show --id <WORK_ITEM_ID>`.
+     - **Basic process** (`To Do / Doing / Done`) → state = **`Doing`**
+     - **Agile process** (`New / Active / Resolved / Closed`, or `To Do / In Progress / Done`) → state = **`Active`** (or `In Progress` if that is the configured column)
+  2. **Update state:** `az boards work-item update --id <WORK_ITEM_ID> --state "<Doing|Active>"`
+  3. **Add discussion comment:** `az boards work-item update --id <WORK_ITEM_ID> --discussion "@agent:pm Starting work on <task summary>"`
+  4. **VERIFY the transition succeeded (MANDATORY):** re-fetch `az boards work-item show --id <WORK_ITEM_ID>` and confirm `System.State` is no longer `To Do` / `New`. If it did not change, retry once with the other process's state value, then escalate to `@agent:pm` if still stuck. Never proceed to coding on a silent failure.
+
+  > **WARN-AZURE-BASIC-STATES (inlined — `critical-warnings.md` not present in repo):**
+  > - `"Active"` is an **Agile-only** state. On the **Basic** process it does not exist and Azure DevOps rejects the update **silently** — the work item stays in `To Do` with no error. Always detect the process first and use `Doing` on Basic.
+  > - Only **Task** items transition via this section. Your parent Issue is transitioned by you in the **Parent Issue Rollup** block below.
+
+**Parent Issue Rollup** — run immediately after the Task transition above, and again after your Task reaches Done (§3.7):
+
+**Rollup rules:**
+- **Issue → In Progress** (Agile: `Active`; Basic: `Doing`) when the **first** child Task (including yours) transitions to In Progress / Active / Doing.
+- **Issue → Done** (Agile: `Closed`; Basic: `Done`) when **ALL** child Tasks under the Issue are Done / Closed.
+
+**Azure DevOps mode procedure:**
+1. Find the parent Issue: `az boards work-item show --id <YOUR_TASK_ID>` → read `System.Parent` (the Issue ID).
+2. Query all children of that Issue: `az boards query --wiql "SELECT [System.State] FROM WorkItems WHERE [System.Parent] = <ISSUE_ID>"` and read each child's `System.State`.
+3. Detect the process once (same rule as step 1 above): Basic → `Doing`/`Done`; Agile → `Active`/`Closed`.
+4. Apply the rollup rule: if any child is In Progress and the Issue is still New/To Do → set `Active`; if all children are Done/Closed → set `Done`/`Closed`.
+5. Update: `az boards work-item update --id <ISSUE_ID> --state "<Active|Done|Closed>"` and re-fetch `az boards work-item show --id <ISSUE_ID>` to verify. Skip the update if the Issue is already in the target state.
+
+**Jira mode:** Transition the parent Story via `atlassian-rovo-mcp_transitionJiraIssue` using the equivalent transition IDs.
+
+**When to run:** immediately after your own Task transition to In Progress (above) and after your Task reaches Done (§3.7). Do NOT poll — only run on your own state changes. After rolling up the Issue, report the new Issue state to `@agent:pm` so PM can roll up the Epic.
 
 ### 3.2 Branch Management
 - Pull latest code from remote, create feature branch

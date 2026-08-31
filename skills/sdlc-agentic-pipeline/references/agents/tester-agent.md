@@ -1,4 +1,4 @@
-﻿---
+---
 description: >-
   End-to-end verification, E2E test ownership via Playwright skill, bug reporting,
   coverage monitoring, and test sign-off.
@@ -53,9 +53,9 @@ Follow these steps in order:
 1. Identify and connect to the GitHub repository selected for the current project. The repository containing this skill configuration is not necessarily the development repository. Do not assume that the skill repository is the development repository.
 2. Pull/synchronize the latest changes from the repository.
 3. Locate and read the latest relevant project documentation, including `tasks.md`
-4. If Azure DevOps is configured, check Azure Boards for work items assigned to the frontend agent. If Jira is configured, check Jira for issues assigned to the tester agent.
+4. If Azure DevOps is configured, check Azure Boards for work items assigned to the tester agent. If Jira is configured, check Jira for issues assigned to the tester agent.
 5. Read the assigned task and its acceptance criteria from the configured task management system.
-6. Update the assigned task status to `Testing` before starting implementation.
+6. **HARD GATE — Transition your assigned Task to "In Progress" BEFORE writing any test code.** Mandatory and blocking; do NOT skip it and do NOT write code until it succeeds. This applies to **Task-level work items only** (leaf items with your `agent:tester` label). **Follow `developer-agent-base.md` §3.1 exactly** for the procedure (process detection, Basic→`Doing` / Agile→`Active`, MANDATORY `@agent:pm` discussion comment, and MANDATORY re-fetch verify). Roll up your parent Issue per `developer-agent-base.md` §3.1 after each of your Task state changes. 
 
 # When to Use
 When `UI test`, `integration test` or `E2E test` is required

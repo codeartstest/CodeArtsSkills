@@ -31,6 +31,7 @@ permission:
     code-reviewer: allow
     dead-code-eliminator: allow
     design-pattern-applier: allow
+    azure-devops-cli: allow
 
     i18n-integration: allow
     jest: allow
