@@ -1,0 +1,4 @@
+# Local state and secrets — never commit
+mcp/mcp_settings.json
+tool-selections.json
+temp/

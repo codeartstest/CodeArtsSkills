@@ -1,0 +1,4 @@
+# CodeArts pipeline local state — never commit
+.codeartsdoer/tool-selections.json
+.codeartsdoer/mcp/mcp_settings.json
+.env
